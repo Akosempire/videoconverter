@@ -43,13 +43,17 @@ http://localhost:5000
 
 Upload a `.mov` file and download the converted `.mp4` version.
 
-The Frame workspace includes drag-and-drop import, local video preview, source
-metadata, and conversion feedback. MOV codecs that cannot play in your browser
-can still be converted. Files are uploaded to the Flask server when you convert.
-The responsive layout supports desktop and mobile screens.
+The workspace reproduces the supplied editing UI: media library, source monitor,
+color inspector, and multitrack reference timeline. Use **Import** to select a MOV,
+then **Export** to convert and download an MP4. MOV codecs that cannot play in your
+browser can still be converted. Files upload to the Flask server when converting.
 
-See [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) for reusable Jinja components, colors,
-spacing, buttons, and layout guidance. No frontend build step is needed.
+The initial scene and tracks are reference samples. Color controls affect the
+monitor preview only; MP4 output retains source colors. Playback, seeking, volume,
+frame capture, asset search, and saved preview presets work in the browser.
+
+See [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) for reusable Jinja components, reference
+geometry, colors, spacing, and behavior. No frontend build step is needed.
 
 Run the conversion tests with `python -m pytest -q` (install `pytest` first).
 
