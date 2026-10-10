@@ -1,51 +1,58 @@
 # MOV to MP4 Converter
 
-A simple Python script to convert .mov files to .mp4 using MoviePy and FFmpeg.
+A simple video converter that works from both the terminal and a browser-based web app.
 
 ## Prerequisites
 
 - Python 3.10+
-- FFmpeg installed and added to PATH
-- MoviePy package
+- FFmpeg installed and available in PATH
 
 ## Install on Windows
 
 ```powershell
-git clone https://github.com/melihteke/moviepy-mov2mp4.git
-cd moviepy-mov2mp4
-py -m pip install -r requirements.txt
+git clone https://github.com/Akosempire/videoconverter.git
+cd videoconverter
+python -m pip install -r requirements.txt
 ```
 
-Install FFmpeg if it is not already available:
+If FFmpeg is not already installed:
 
 ```powershell
 winget install --id Gyan.FFmpeg -e --source winget
 ```
 
-Then confirm it is available:
+Then confirm it works:
 
 ```powershell
 ffmpeg -version
 ```
 
-## Usage
+## Web app usage
 
-Run the converter with your own input and output paths:
-
-```powershell
-py main.py "C:\path\to\input.mov" "C:\path\to\output.mp4"
-```
-
-You can also use the defaults:
+Start the server:
 
 ```powershell
-py main.py
+python app.py
 ```
 
-This will read `test.mov` and write `output.mp4` in the project folder.
+Then open:
+
+```text
+http://localhost:5000
+```
+
+Upload a `.mov` file and download the converted `.mp4` version.
+
+## Terminal usage
+
+```powershell
+python main.py "C:\path\to\input.mov" "C:\path\to\output.mp4"
+```
+
+If you omit the arguments, the script will look for a single `.mov` file in the current folder.
 
 ## Notes
 
-- The script keeps audio in the converted video.
-- It creates the destination folder automatically if needed.
-- The output is encoded with H.264/AAC for broad compatibility.
+- Audio is preserved in the output video.
+- H.264/AAC output is used for broad compatibility.
+- The web app stores uploaded files in the `uploads` directory.
