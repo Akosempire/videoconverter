@@ -62,7 +62,12 @@ def create_app(test_config=None):
     upload_dir.mkdir(parents=True, exist_ok=True)
 
     def error_response(message, status):
-        if request.accept_mimetypes.best == "application/json":
+        accepts_json = (
+            "application/json" in request.headers.get("Accept", "")
+            or request.accept_mimetypes.accept_json
+            or request.accept_mimetypes.best == "application/json"
+        )
+        if accepts_json or request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return {"error": message}, status
         return render_template("index.html", error=message), status
 
@@ -109,8 +114,13 @@ def create_app(test_config=None):
         output_path = upload_dir / f"{input_path.stem}.mp4"
         try:
             convert_mov_to_mp4(str(input_path), str(output_path), quality=quality, resolution=resolution, keep_audio=keep_audio)
-        except Exception:
+        except Exception as exc:
             app.logger.exception("Video conversion failed")
+            detail = str(exc).strip()
+            if "moov atom not found" in detail or "Invalid data" in detail:
+                return error_response("This file doesn’t look like a valid MOV. Try another QuickTime/MOV export.", 500)
+            if "No such file" in detail or "not found" in detail.lower():
+                return error_response("The uploaded file couldn’t be read. Please try uploading again.", 500)
             return error_response("This video could not be converted. Make sure it is a valid MOV file and try again.", 500)
 
         if request.accept_mimetypes.best == "application/json":

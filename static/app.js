@@ -167,7 +167,8 @@
     $('progress').value = 0;
     $('convert-button').querySelector('span').textContent = 'Try again';
     $('export-caption').textContent = 'Your original file has not changed.';
-    $('upload-overlay').classList.remove('is-active','is-converting');
+    const _ov2 = $('upload-overlay');
+    if (_ov2) _ov2.classList.remove('is-active','is-converting');
     session('Conversion failed');
     message(text);
   }
@@ -207,25 +208,32 @@
       $('job-detail').textContent = 'Upload complete. Larger videos can take a few minutes.';
       $('activity-label').textContent = 'CONVERTING';
       $('convert-button').querySelector('span').textContent = 'Converting…';
-      $('upload-overlay-title').textContent = 'Converting your video…';
-      $('upload-overlay-sub').textContent = 'Upload complete. This can take a few minutes.';
-      $('upload-overlay-detail').textContent = 'Hang tight — building your MP4';
-      $('upload-overlay-pct').textContent = 'Converting…';
-      $('upload-overlay').classList.add('is-converting');
+      const _ov = $('upload-overlay');
+      if ($('upload-overlay-title')) $('upload-overlay-title').textContent = 'Converting your video…';
+      if ($('upload-overlay-sub')) $('upload-overlay-sub').textContent = 'Upload complete. This can take a few minutes.';
+      if ($('upload-overlay-detail')) $('upload-overlay-detail').textContent = 'Hang tight — building your MP4';
+      if ($('upload-overlay-pct')) $('upload-overlay-pct').textContent = 'Converting…';
+      if (_ov) _ov.classList.add('is-converting');
       session('Converting your video');
     });
     request.addEventListener('load', () => {
       let result;
-      try { result = JSON.parse(request.responseText); } catch { fail(request.status === 413 ? 'This file exceeds the upload limit. Try a smaller MOV file.' : 'The server returned an unexpected response. Please try again.'); return; }
+      try { result = JSON.parse(request.responseText); } catch {
+        const raw = request.responseText || '';
+        const m = raw.match(/<div class="alert[^"]*">([^<]+)<\/div>/) || raw.match(/<title[^>]*>([^<]+)<\/title>/);
+        const htmlMsg = m ? m[1].trim() : '';
+        const msg = htmlMsg || (request.status === 413 ? 'This file exceeds the 500 MB upload limit. Try a smaller MOV file.' : `Server returned ${request.status || 'an unexpected'} response. ${raw.slice(0,180).replace(/<[^>]+>/g,' ').trim()}`) || 'The server returned an unexpected response. Please try again.';
+        fail(msg.slice(0, 300)); return;
+      }
       if (request.status < 200 || request.status >= 300 || !result.download_url) { fail(result.error || 'Conversion could not finish. Try another MOV file.'); return; }
       $('progress').value = 100;
-      $('upload-overlay-fill').style.width = '100%';
-      $('upload-overlay').classList.remove('is-converting');
-      $('upload-overlay-pct').textContent = '100%';
-      $('upload-overlay-title').textContent = 'Ready! ✓';
-      $('upload-overlay-sub').textContent = `${result.filename} · ${size(result.size)} · MP4`;
-      $('upload-overlay-detail').textContent = 'Your MP4 is ready in the Conversion panel.';
-      setTimeout(()=> $('upload-overlay').classList.remove('is-active'), 1400);
+      if ($('upload-overlay-fill')) $('upload-overlay-fill').style.width = '100%';
+      if ($('upload-overlay')) $('upload-overlay').classList.remove('is-converting');
+      if ($('upload-overlay-pct')) $('upload-overlay-pct').textContent = '100%';
+      if ($('upload-overlay-title')) $('upload-overlay-title').textContent = 'Ready! ✓';
+      if ($('upload-overlay-sub')) $('upload-overlay-sub').textContent = `${result.filename} · ${size(result.size)} · MP4`;
+      if ($('upload-overlay-detail')) $('upload-overlay-detail').textContent = 'Your MP4 is ready in the Conversion panel.';
+      if ($('upload-overlay')) setTimeout(()=> $('upload-overlay').classList.remove('is-active'), 1400);
       $('job').classList.add('is-complete');
       $('job-icon').classList.add('is-complete');
       $('job-status').textContent = 'Ready to download';
