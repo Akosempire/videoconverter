@@ -43,19 +43,41 @@ http://localhost:3000
 
 Upload a `.mov` file and download the converted `.mp4` version.
 
-The workspace reproduces the supplied editing UI: media library, source monitor,
-color inspector, and multitrack reference timeline. Use **Import** to select a MOV,
-then **Export** to convert and download an MP4. MOV codecs that cannot play in your
-browser can still be converted. Files upload to the Flask server when converting.
+The workspace starts empty. Choose or drop one MOV file to see its real preview,
+thumbnail, name, size, duration, and dimensions. Replace or remove the source at
+any time before converting. A codec the browser cannot preview can still be sent
+for conversion.
 
-The initial scene and tracks are reference samples. Color controls affect the
-monitor preview only; MP4 output retains source colors. Playback, seeking, volume,
-frame capture, asset search, and saved preview presets work in the browser.
+Export settings affect the generated file:
 
-See [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) for reusable Jinja components, reference
-geometry, colors, spacing, and behavior. No frontend build step is needed.
+- Quality: Balanced (CRF 23), High quality (CRF 18), Smaller file (CRF 28).
+- Resolution: original, up to 1080p, or up to 720p. Limits preserve orientation and
+  aspect ratio without enlarging a smaller source.
+- Keep audio: include source audio as AAC, or create a silent MP4.
 
-Run the conversion tests with `python -m pytest -q` (install `pytest` first).
+Upload progress is measured, followed by an indeterminate conversion state. A
+successful response reveals the MP4 download. Errors preserve the source for a
+retry. Files upload to the Flask server only when you convert; preview stays local.
+The reference image informs the dark panels and accent colors only. There are no
+sample files, pretend tracks, or color controls disconnected from the export.
+
+See [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) for the component and state model.
+The `/design-system` page uses the same component styles as the workspace.
+No frontend build step is needed.
+
+Run backend tests with `python -m pytest -q` (install `pytest` first).
+For browser regression checks, install `playwright`, run
+`python -m playwright install chromium`, start the app on port 3000, and run:
+
+```powershell
+$env:WORKSPACE_TEST_URL = "http://127.0.0.1:3000"
+python tests/browser_workspace.py
+```
+
+The browser checks cover empty/imported states, real export/download, options,
+failures and retry, unsupported previews, file removal, drag/drop, long filenames,
+320–1920px layouts, and the JavaScript-disabled form. Screenshots are saved under
+`.tmp/workspace-checks` and excluded from Git.
 
 ## Production deployment (Pxxl)
 

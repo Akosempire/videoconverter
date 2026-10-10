@@ -1,55 +1,67 @@
-﻿{% from 'components/editor.html' import glyph, tool, slider, asset %}
+{% from 'components/editor.html' import glyph %}
+{% from 'components/workspace.html' import action, heading %}
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#080808"><title>Design challenge — Video converter</title><link rel="stylesheet" href="{{ url_for('static', filename='editor.css') }}"><script defer src="{{ url_for('static', filename='app.js') }}"></script></head>
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#101112">
+  <title>Video converter — MOV to MP4</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='editor.css') }}">
+  <script defer src="{{ url_for('static', filename='app.js') }}"></script>
+</head>
 <body>
-<div class="editor">
-<header class="topbar">
-  <div class="window-dots" aria-hidden="true"><i></i><i></i><i></i></div>
-  {{ tool('home', 'Reset workspace', 'home', true) }}
-  <nav class="workflow"><button type="button" id="import-button">Import</button><button type="button" class="selected" id="edit-button">Edit</button><button type="button" id="export-button">Export</button></nav>
-  <span class="project-title">Design challenge {{ glyph('cloud', 14) }}</span>
-  <div class="top-tools">{{ tool('layout','Toggle media library','layout-button',true) }}{{ tool('search','Search media','search-button') }}{{ tool('expand','Full screen','fullscreen-button') }}{{ tool('share','Export MP4','share-button') }}</div>
+<header class="app-header">
+  <a class="brand" href="/" aria-label="Video converter home"><span class="brand-icon">{{ glyph('film',22) }}</span><span>Video<span class="brand-light">converter</span></span></a>
+  <span class="header-divider"></span><span class="header-context">Conversion workspace</span>
+  <a class="source-link" href="https://github.com/Akosempire/videoconverter" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
 </header>
-<div class="workspace">
-<aside class="pane library" id="library">
-  <div class="tabbar" role="tablist" aria-label="Media library"><button role="tab" aria-selected="true" class="selected" data-library="project">Design challenge</button><button role="tab" aria-selected="false" data-library="presets">Presets</button><button role="tab" aria-selected="false" data-library="templates">Templates</button><button role="tab" aria-selected="false" data-library="library">Library</button><span>»</span></div>
-  <div class="project-folder">{{ glyph('folder',14) }} Learning.Project</div>
-  <div class="search-row"><label class="search-box">{{ glyph('search',14) }}<input id="media-search" aria-label="Search media"></label>{{ tool('settings','Sort media by name','sort-media') }}<span id="file-count">4 items</span></div>
-  <div class="assets" id="assets">{{ asset('film','lounge','Assetname here',true) }}{{ asset('film','people','Assetname here') }}{{ asset('audio','audio','Assetname here') }}{{ asset('image','meeting','Assetname here') }}</div>
-  <p class="library-message" id="library-message" hidden></p>
-  <div class="library-toolbar">{{ tool('more','Media details','media-details') }}{{ tool('list','List view','list-view') }}{{ tool('grid','Grid view','grid-view',true) }}{{ tool('folder','Import MOV','folder-import') }}{{ tool('trash','Remove imported file','remove-file') }}<input type="range" id="thumbnail-size" min="85" max="150" value="110" aria-label="Thumbnail size">{{ tool('image','Select reference scene','reference-scene') }}{{ tool('plus','Import MOV','add-file') }}</div>
-</aside>
-<section class="pane monitor-pane" aria-label="Source monitor" id="drop-zone">
-  <div class="monitor" id="monitor"><div class="reference-preview scene-lounge" id="reference-preview" role="img" aria-label="Reference sample: lounge with circular ceiling lights"></div><video id="preview" playsinline hidden></video><div class="drop-overlay">Drop a MOV file to import</div></div>
-  <div class="monitor-meta"><output id="timecode">00:00:01:29</output><select id="preview-fit" aria-label="Preview scaling"><option value="contain">Fit</option><option value="cover">Fill</option></select><div class="media-indicators"><span>{{ glyph('film',16) }}</span><span>{{ glyph('audio',16) }}</span></div><select id="playback-rate" aria-label="Playback speed"><option value="0.5">1/2</option><option value="1" selected>1</option><option value="2">2</option></select>{{ tool('settings','Show source properties','source-properties') }}<span id="duration">01:35:11:26</span></div>
-  <div class="monitor-ruler" aria-hidden="true"></div><input class="scrubber" type="range" min="0" max="1000" value="0" id="scrubber" aria-label="Seek video">
-  <div class="transport"><div>{{ tool('camera','Save current frame','snapshot') }}{{ tool('film','Show video','show-video') }}{{ tool('crop','Toggle fit and fill','fit-toggle') }}</div><div class="playback">{{ tool('pen','Jump to playhead','jump-playhead') }}{{ tool('previous','Previous frame','previous-frame') }}<button type="button" class="play-button" id="play-button" aria-label="Play preview">▶</button>{{ tool('next','Next frame','next-frame') }}{{ tool('volume','Mute preview','mute-button') }}<input type="range" id="volume" min="0" max="1" step="0.05" value="0.8" aria-label="Volume"></div><div>{{ tool('layout','Toggle color panel','color-panel-button') }}{{ tool('plus','Import MOV','monitor-import') }}</div></div>
-</section>
-<aside class="pane inspector" id="inspector">
-  <div class="tabbar" role="tablist" aria-label="Inspector"><button role="tab" class="selected" aria-selected="true" data-inspector="color">Lumetric Color</button><button role="tab" aria-selected="false" data-inspector="properties">Properties</button><button role="tab" aria-selected="false" data-inspector="effects">Effect control</button><span>»</span></div>
-  <div id="color-content"><div class="preset-toolbar">{{ tool('settings','Reset preview adjustments','reset-color') }}<button type="button" id="save-preset">⊕ New Preset</button><button type="button" id="load-preset">♧ Custom Preset</button></div>
-  <details class="correction"><summary>Basic Correction <input type="checkbox" checked id="basic-enabled" aria-label="Enable basic correction"></summary><div class="correction-body">{{ slider('Exposure','exposure',100,25,175) }}{{ slider('Contrast','contrast',100,0,200) }}</div></details>
-  <details open class="creative"><summary>Creative <input type="checkbox" checked id="creative-enabled" aria-label="Enable creative preview"></summary>
-  <div class="creative-body"><label class="color-space">Color Space <select id="color-space"><option>Rec. 709 (Scene)</option><option>Rec. 709 (Display)</option></select></label>
-  <div class="looks"><button type="button" class="look selected" data-look="cine"><span class="scene-lounge"></span>Cine space</button><button type="button" class="look" data-look="fuji"><span class="scene-lounge"></span>Fuji Eterna</button><button type="button" class="look" data-look="warm"><span class="scene-lounge"></span>Fuji Warm</button></div>
-  {{ slider('Faded film','fade',100,0,300) }}{{ slider('Sharpen','sharpen',100,0,250) }}{{ slider('Vibrance','vibrance',100,50,400) }}{{ slider('Saturation','saturation',100,50,400) }}
-  <div class="color-wheels"><label><input type="color" value="#808080" id="shadow-tint" aria-label="Shadow tint"><span class="color-wheel"></span><span>Shadow Tint</span></label><label><input type="color" value="#ffffff" id="highlight-tint" aria-label="Highlight tint"><span class="color-wheel"></span><span>Highlight Tint</span></label></div>
-  {{ slider('Tint Balance','tint',100,50,400) }}
-  </div></details>
-  <details class="curves"><summary>Curves <input type="checkbox" id="curves-enabled" aria-label="Enable contrast curve"></summary><div class="curve-graph" aria-label="Contrast curve preview"></div></details></div>
-  <div class="inspector-info" id="properties-content" hidden><h2>Source properties</h2><dl><dt>File</dt><dd id="source-name">Reference sample</dd><dt>Source</dt><dd id="source-size">Visual reference — import MOV to convert</dd><dt>Resolution</dt><dd id="source-resolution">—</dd><dt>Output</dt><dd>MP4 · H.264 / AAC</dd></dl><p>Color controls adjust the monitor preview. MP4 conversion preserves the source colors.</p><button type="button" class="small-button" id="properties-import">Import MOV</button></div>
-  <div class="inspector-info" id="effects-content" hidden><h2>Preview effects</h2><p>Creative looks and color controls are applied to the source monitor.</p><p>Export uses the original footage with H.264 video and AAC audio.</p><button type="button" class="small-button" id="effects-reset">Reset preview effects</button></div>
-</aside>
-<section class="timeline-layout" aria-label="Timeline">
-  <div class="pane tool-rail">{{ tool('pointer','Selection tool','selection-tool',true) }}{{ tool('layers','Show all tracks','layers-tool') }}{{ tool('magnet','Snap playhead to frames','snap-tool') }}{{ tool('move','Fit timeline','timeline-fit') }}{{ tool('pen','Set playhead to start','pen-tool') }}{{ tool('cut','Open export','cut-tool') }}{{ tool('hand','Scroll timeline','hand-tool') }}</div>
-  <div class="pane timeline-panel"><div class="track-headers"><div class="track-heading"><button type="button" id="clear-panel">♧ Clear panel</button>{{ tool('file','Import source','track-import') }}<span class="cc">CC</span></div>{% for n in range(3) %}<div class="track-header"><div><span>Assetname here</span><span class="purple">{{ glyph('spark',15) }}</span></div><div>{{ tool('lock','Lock track '~(n+1)) }}{{ tool('eye','Toggle track visibility '~(n+1)) }}<button type="button" class="track-mute" aria-label="Mute track {{ n+1 }}">M</button><button type="button" class="track-solo" aria-label="Solo track {{ n+1 }}">S</button><span>{{ glyph('audio',13) }}</span></div></div>{% endfor %}</div>
-  <div class="timeline-scroll" id="timeline-scroll"><div class="timeline-content"><div class="timeline-ruler" id="timeline-ruler">{% for n in range(7) %}<span>00:00:00:00</span>{% endfor %}</div><div class="timeline-track"><button type="button" class="timeline-clip clip-blue" data-scene="lounge"><span class="clip-title">Assetname here</span><i>fx</i><span class="clip-thumb scene-lounge"></span></button></div><div class="timeline-track"><button type="button" class="timeline-clip clip-purple" data-scene="meeting"><span class="clip-title">Assetname here</span><i>fx</i><span class="clip-thumb scene-meeting"></span></button></div><div class="timeline-track"><button type="button" class="timeline-clip clip-green" data-scene="audio"><span class="clip-title">Assetname here</span><i>fx</i><span class="waveform" aria-hidden="true">{% for n in range(110) %}<b style="height:{{ 10 + ((n * 37 + n * n) % 90) }}%"></b>{% endfor %}</span></button></div><div class="playhead" id="playhead"><span></span></div></div></div><input type="range" id="timeline-zoom" aria-label="Timeline zoom" min="100" max="250" value="100"></div>
-  <div class="pane audio-meter"><div class="meter-scale">{% for n in [0,12,24,36,48,60] %}<span>{{ n }}</span>{% endfor %}</div><span>DB</span></div>
-</section>
-</div>
-</div>
-<div id="feedback" class="feedback" aria-live="polite">{% if error %}<div class="alert error" role="alert">{{ error }}</div>{% endif %}{% if success %}<div class="alert success">Conversion complete. <a href="{{ download_url }}" download>Download {{ filename }}</a></div>{% endif %}</div>
-<dialog id="export-dialog"><form action="{{ url_for('convert') }}" method="post" enctype="multipart/form-data" id="converter-form"><div class="dialog-heading"><h2>Export media</h2>{{ tool('close','Close export','close-export') }}</div><label class="file-picker">Source MOV<input type="file" id="video" name="video" accept=".mov,.MOV,video/quicktime" required></label><p id="export-source">Choose your MOV file. Maximum 500 MB.</p><dl><dt>Format</dt><dd>MP4</dd><dt>Video codec</dt><dd>H.264 · Original resolution</dd><dt>Audio</dt><dd>AAC · Preserved when present</dd></dl><p class="export-note">Color adjustments are preview-only. Your original footage is converted without color changes.</p><button type="submit" class="export-action" id="convert-button">Convert to MP4</button><div id="export-feedback" aria-live="polite"></div></form></dialog>
-<noscript><style>#export-dialog {display:block;position:relative;margin:20px auto}.editor{pointer-events:none}</style><p class="noscript-note">Enable JavaScript for the editing workspace, or convert your file using the form above.</p></noscript>
-</body></html>
+<main>
+  <div class="workspace-heading"><div><span class="eyebrow">YOUR WORKSPACE</span><h1>Good footage. Any screen.</h1><p>Convert MOV to MP4, ready to play and share.</p></div><span class="session-status" id="session-status"><i></i> Ready when you are</span></div>
+  <form id="converter-form" action="{{ url_for('convert') }}" method="post" enctype="multipart/form-data">
+    <label class="native-file" for="video">Choose a MOV file<input type="file" id="video" name="video" accept=".mov,.MOV,video/quicktime" required aria-describedby="file-guidance"></label>
+    <div class="workspace-grid">
+      <aside class="panel media-panel">
+        <div class="panel-heading"><h2>{{ glyph('folder',16) }} Media</h2><span class="count" id="file-count">0</span></div>
+        <div class="media-body">
+          <div class="media-empty" id="media-empty"><span class="muted-icon">{{ glyph('film',28) }}</span><h3>Your footage lives here</h3><p>Add a MOV file to see its details and preview.</p><button type="button" class="text-button" data-import>{{ glyph('plus',15) }} Add a file</button></div>
+          <div class="media-card" id="media-card" hidden><div class="media-thumbnail"><img id="thumbnail" alt="Uploaded video frame" hidden><span id="thumbnail-fallback">{{ glyph('film',36) }}</span><span class="file-type">MOV</span><span class="thumbnail-duration" id="thumbnail-duration"></span></div><div class="media-card-info"><strong id="source-name"></strong><span id="source-size"></span></div></div>
+          <dl class="source-details" id="source-details" hidden><div><dt>Duration</dt><dd id="source-duration">Reading…</dd></div><div><dt>Dimensions</dt><dd id="source-resolution">Reading…</dd></div><div><dt>Source format</dt><dd>QuickTime / MOV</dd></div></dl>
+          <div class="media-actions" id="media-actions" hidden><button type="button" class="text-button" data-import>Replace file</button><button type="button" class="icon-button" id="remove-file" aria-label="Remove file" title="Remove file">{{ glyph('trash',16) }}</button></div>
+        </div>
+        <div class="panel-note">{{ glyph('lock',14) }} Your original file stays unchanged.</div>
+      </aside>
+      <section class="panel preview-panel" aria-label="Video preview">
+        <div class="panel-heading"><h2>Source preview</h2><span class="panel-label" id="preview-label">NO FILE SELECTED</span></div>
+        <div class="monitor" id="drop-zone">
+          <div class="preview-empty" id="preview-empty"><div class="empty-art" aria-hidden="true"><span></span><div>{{ glyph('film',36) }}</div></div><span class="format-pill">MOV <span>→</span> MP4</span><h2>Your next video starts here.</h2><p>Drop your MOV file into the workspace,<br>or choose one from your device.</p>{{ action('Choose a video','plus','choose-file',true) }}<span class="file-guidance" id="file-guidance">MOV files · Up to 500 MB · One at a time</span></div>
+          <video id="preview" controls playsinline preload="auto" hidden></video>
+          <div class="preview-unavailable" id="preview-unavailable" hidden>{{ glyph('film',32) }}<h3>Preview isn’t available for this file</h3><p>Your browser may not support its codec. You can still try converting it to MP4.</p></div>
+          <div class="drop-overlay" aria-hidden="true">{{ glyph('plus',36) }} Drop to import your MOV</div>
+        </div>
+        <div class="preview-footer"><span class="preview-dot"></span><span id="preview-note">A preview will appear after you add a file</span><span class="preview-fit">SOURCE</span></div>
+      </section>
+      <aside class="panel export-panel">
+        {{ heading('Export settings', 'OUTPUT') }}
+        <div class="export-body"><div class="output-format"><span class="format-symbol">{{ glyph('film',24) }}</span><div><strong>MP4</strong><span>Plays almost everywhere</span></div><span class="format-selected">✓</span></div>
+          <fieldset id="export-options"><legend class="sr-only">Output options</legend>
+            <label class="field" for="quality"><span>Quality</span><select id="quality" name="quality"><option value="standard">Balanced</option><option value="high">High quality</option><option value="small">Smaller file</option></select><small id="quality-description">A balance of clarity and file size.</small></label>
+            <label class="field" for="resolution"><span>Resolution</span><select id="resolution" name="resolution"><option value="original">Keep original</option><option value="1080">Up to 1080p</option><option value="720">Up to 720p</option></select><small>Aspect ratio stays the same. No upscaling.</small></label>
+            <label class="audio-option"><span><strong>Keep audio</strong><small>Include the source audio, if present</small></span><input type="checkbox" name="keep_audio" id="keep-audio" value="yes" checked><span class="switch" aria-hidden="true"></span></label>
+          </fieldset>
+          <div class="output-summary"><span>Video codec <b>H.264</b></span><span>Audio codec <b id="audio-codec">AAC</b></span></div>
+          {{ action('Convert to MP4','share','convert-button',true,'submit') }}
+          <p class="export-caption" id="export-caption">Add a file to start converting.</p>
+        </div>
+      </aside>
+      <section class="panel activity-panel" aria-label="Conversion status">
+        <div class="panel-heading"><h2>Conversion</h2><span class="panel-label" id="activity-label">NOT STARTED</span></div>
+        <div class="activity-empty" id="activity-empty">{{ glyph('layers',22) }}<div><h3>A clear path from source to export.</h3><p>Your conversion status and download will appear here.</p></div><span class="activity-path" aria-hidden="true">Import <i>→</i> Convert <i>→</i> Download</span></div>
+        <div class="job" id="job" hidden><div class="job-icon">{{ glyph('film',22) }}</div><div class="job-body"><div class="job-heading"><strong id="job-name"></strong><span class="job-status" id="job-status">Ready to convert</span></div><div class="job-progress"><progress id="progress" max="100" value="0" aria-label="Upload progress"></progress><span id="job-detail">Choose your export settings, then convert.</span></div></div><a class="button button-primary download-button" id="download-button" hidden download>Download MP4 {{ glyph('share',16) }}</a></div>
+        <div id="feedback" aria-live="polite" aria-atomic="true">{% if error %}<div class="alert error" role="alert">{{ error }}</div>{% endif %}{% if success %}<div class="alert success">Conversion complete. <a href="{{ download_url }}" download>Download {{ filename }}</a></div>{% endif %}</div>
+      </section>
+    </div>
+  </form>
+  <footer class="workspace-footer"><span>{{ glyph('lock',13) }} Preview on your device. Upload when you convert.</span><span>MOV in. MP4 out.</span></footer>
+</main>
+<noscript><style>.native-file{position:static!important;width:auto!important;height:auto!important;clip-path:none!important;padding:16px;margin-bottom:16px;border:1px solid #333}.native-file input{margin:12px}#choose-file,[data-import]{display:none!important}</style></noscript>
+</body>
+</html>

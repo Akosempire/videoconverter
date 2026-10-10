@@ -1,60 +1,70 @@
-﻿# Video editor design system
+﻿# Video converter design system
 
-The primary screen now reproduces the supplied video editor reference: a 1536 ×
-1092 black application shell on a charcoal canvas, 35px navigation, three editing
-panes, and a lower multitrack timeline. At the reference's 2048 × 1235 viewport,
-the shell sits at x=256 and y=71.5, matching the supplied composition.
+A functional conversion workspace inspired by the reference's dark panels,
+warm yellow actions, blue video accents, and green completion states. The image
+is not a screenshot template or preloaded project.
 
-## Source and components
+## Components and source
 
-- `templates/components/editor.html`: reusable SVG glyphs, icon buttons, asset
-  cards, and adjustment sliders.
-- `templates/index.html`: reference workspace assembled from those components.
-- `static/editor.css`: reference colors, geometry, control states, and responsive
-  layouts. Panel gap 8px; panel radius 6px; spacing scale 4/8/12/16px.
-- `static/assets/editor-reference.jpg`: user-supplied visual reference, used as a
-  CSS image sprite for the lounge, people, and meeting-room image assets. Panels,
-  controls, type, tracks, and color wheels are real HTML/CSS, not a screenshot
-  overlay. No external stock imagery or image generation is used.
-
-## Palette
-
-| Token | Color |
-| --- | --- |
-| Surround | `#282828` |
-| Application shell | `#030303` |
-| Pane | `#0a0a0a` |
-| Raised surface | `#191919` |
-| Text | `#898989` |
-| Selection | `#c69d16` |
-| Video track | `#0784d8` |
-| Image track | `#bb00e5` |
-| Audio track | `#00bf69` |
+- `templates/components/workspace.html`: shared action button and panel-heading macros.
+- `templates/components/editor.html`: reusable inline SVG glyphs.
+- `templates/index.html`: media, preview, export, and conversion-status panels.
+- `static/editor.css`: semantic tokens, states, and responsive layout.
+- `static/app.js`: source lifecycle and actual upload/conversion behavior.
+- `/design-system`: component specimens using these shared styles.
 
 ```jinja
-{% from 'components/editor.html' import tool, slider, asset %}
-{{ tool('folder', 'Import MOV', 'import-button') }}
-{{ slider('Saturation', 'saturation', 100, 50, 400) }}
-{{ asset('film', 'lounge', 'Assetname here', true) }}
+{% from 'components/workspace.html' import action, heading %}
+{{ heading('Source preview', 'SOURCE') }}
+{{ action('Choose a video', 'plus', 'choose-file', true) }}
 ```
 
-## Behavior
+## Foundations
 
-Import opens the MOV picker. Export opens a native modal with the existing
-Flask conversion form. Drag a MOV onto the source monitor to import. The preview
-supports playback, seeking, frame stepping, volume, playback speed, and frame
-capture for browser-compatible codecs. Unsupported MOV codecs can still convert.
+| Role | Token / value |
+| --- | --- |
+| Canvas | `--bg: #101112` |
+| Panel | `--panel: #18191c` |
+| Raised controls | `--surface: #222327` |
+| Border | `--border: #2c2d32` |
+| Main text | `--text: #eeeff2` |
+| Supporting text | `--muted: #9a9da7` |
+| Primary action | `--accent: #eccc72` |
+| Video / progress | `--blue: #78b8f1` |
+| Completion | `--green: #74cfaa` |
+| Error | `--error: #f5a4a4` |
+| Spacing | 4, 8, 12, 16, 20, 24, 32px |
+| Radii | panels 10px, buttons 6px |
 
-The initial project contains reference sample images and illustrative timeline
-tracks. It is not a playable sample video. Imported MOV footage populates the
-source monitor and first video clip. Timeline tracks provide reference selection,
-visibility, locking, and preview mute/solo controls; they do not concatenate media.
+System fonts avoid external font downloads. Icons are SVG and decorative icons
+are hidden from assistive technology. Every control has a label and visible
+keyboard focus. Essential feedback uses a live region. Reduced motion is honored
+for scrolling to conversion status. No automatic promotional animation is used.
 
-Color presets, sliders, and tint controls affect the monitor preview only. The
-Export modal and Properties/Effect control panels disclose that MP4 export uses
-original source colors. Saved preview presets use browser local storage.
+## Product states
 
-The earlier optional `/design-system` gallery retains the raised button variants
-from the second user reference. The application's main UI uses the first image's
-compact editor controls instead. Below 900px panels reflow; below 540px monitor,
-media library, inspector, and timeline stack while retaining their visual styles.
+1. **Empty:** no files or preview imagery; clear import action; export disabled.
+2. **Ready:** actual filename, size, metadata, frame thumbnail, native video player,
+   and source removal/replacement. No fabricated duration or waveform.
+3. **Preview unsupported:** a fallback explains that conversion can still be tried.
+4. **Uploading:** measured upload percentage; source and settings locked.
+5. **Converting:** indeterminate progress, no fabricated completion percentage.
+6. **Complete:** server-provided filename, byte size, and working download link.
+7. **Error:** actionable feedback and retry using the same source and settings.
+8. **Removed/replaced:** object URL released; metadata and download state reset.
+
+Quality, resolution, and audio controls alter the server conversion. No visual
+editing controls imply changes that are not included in the downloaded MP4.
+The standard multipart form remains usable without JavaScript.
+
+## Responsive layout
+
+- Above 980px: media library, flexible preview, export settings, then full-width
+  conversion status. No fixed application aspect ratio or viewport-height lock.
+- 621–980px: media and preview share a row; export spans the next row.
+- 620px and below: preview first, compact source card, settings, conversion status.
+  Populated preview uses a 16:10 containing frame; portrait video is letterboxed.
+- Checked at 320, 390, 620, 768, 980, 1024, 1280, and 1920px, including long names.
+
+No screenshot image, hardcoded reference assets, sample tracks, or mock project
+is loaded by the application.

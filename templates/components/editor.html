@@ -1,4 +1,4 @@
-﻿{% macro glyph(name, size=16) -%}
+{% macro glyph(name, size=16) -%}
 <svg width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 {% set paths = {'home':'m3 11 9-8 9 8v10H3Z','search':'m16 16 5 5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0','folder':'M3 6h7l2 3h9v12H3Z','plus':'M12 5v14M5 12h14','grid':'M3 3h7v7H3ZM14 3h7v7h-7ZM3 14h7v7H3ZM14 14h7v7h-7Z','list':'M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1','film':'M3 4h18v16H3ZM7 4v16M17 4v16M3 9h4m-4 6h4m10-6h4m-4 6h4','audio':'M4 10v4m4-8v12m4-15v18m4-15v12m4-8v4','image':'M3 3h18v18H3Zm0 14 6-6 5 5 3-3 4 4M16 7h.01','settings':'M4 7h16M4 17h16M9 4v6M15 14v6','expand':'M3 9V3h6m6 0h6v6M3 15v6h6m6 0h6v-6','share':'m14 3 7 6-7 6V11c-6 0-9 3-11 7 0-8 4-12 11-12Z','cloud':'M7 18H5a4 4 0 0 1-1-8 7 7 0 0 1 13-2 5 5 0 0 1 2 10h-3m-4 3V11m-3 3 3-3 3 3','camera':'M3 7h5l2-3h4l2 3h5v14H3ZM16 13a4 4 0 1 1-8 0 4 4 0 0 1 8 0','crop':'M6 3v15h15M3 6h15v15','previous':'M5 5v14m14-14L7 12l12 7Z','next':'M19 5v14M5 5l12 7-12 7Z','volume':'M3 9h4l5-5v16l-5-5H3ZM16 8q6 4 0 8','pointer':'m5 3 5 18 3-8 8-3Z','layers':'m3 9 9-6 9 6-9 6Zm0 6 9 6 9-6','magnet':'M5 3v10a7 7 0 0 0 14 0V3h-4v10a3 3 0 0 1-6 0V3ZM5 8h4m6 0h4','move':'M3 12h18m-4-4 4 4-4 4M7 8l-4 4 4 4','pen':'m4 20 4-12 9-5 4 4-5 9Zm0 0 9-9','cut':'m9 9 12 12M9 15 21 3M9 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0','hand':'M7 12V5a2 2 0 0 1 4 0v6-8a2 2 0 0 1 4 0v8-6a2 2 0 0 1 4 0v8-3a2 2 0 0 1 4 0v5q0 7-8 7l-8-8q-1-4 3-2l3 2','lock':'M5 10h14v11H5ZM8 10V6a4 4 0 0 1 8 0v4','eye':'M2 12q10-14 20 0-10 14-20 0M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0','spark':'m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z','file':'M5 2h9l5 5v15H5ZM14 2v6h5','trash':'M3 6h18M9 6V3h6v3M6 6l1 15h10l1-15','layout':'M3 4h18v16H3ZM8 4v16','close':'m6 6 12 12M6 18 18 6'} %}
 <path d="{{ paths.get(name, 'M5 12h.01M12 12h.01M19 12h.01') }}"/>
@@ -6,12 +6,4 @@
 {%- endmacro %}
 {% macro tool(name, label, id='', active=false) -%}
 <button type="button" class="tool {{ 'active' if active }}" title="{{ label }}" aria-label="{{ label }}"{% if id %} id="{{ id }}"{% endif %}>{{ glyph(name) }}</button>
-{%- endmacro %}
-{% macro slider(label, id, value=100, min=0, max=200) -%}
-<label class="adjustment"><span>{{ label }}<output id="{{ id }}-value">{{ '%.1f'|format(value) }}</output></span><input id="{{ id }}" type="range" min="{{ min }}" max="{{ max }}" value="{{ value }}" aria-label="{{ label }}"></label>
-{%- endmacro %}
-{% macro asset(kind, scene, name, selected=false) -%}
-<button type="button" class="asset {{ 'selected' if selected }}" data-scene="{{ scene }}" data-name="{{ name }}" title="{{ name }} — reference sample">
-<span class="asset-image scene-{{ scene }}">{% if kind == 'audio' %}{{ glyph('audio', 40) }}{% endif %}<span class="asset-time">00:35:25:19</span><span class="asset-kind {{ kind }}">{{ glyph(kind, 15) }}</span></span><span class="asset-name">{{ name }}</span>
-</button>
 {%- endmacro %}

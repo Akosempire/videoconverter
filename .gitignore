@@ -6,3 +6,4 @@ uploads/
 node_modules/
 .env
 .tmp/
+debug.log
