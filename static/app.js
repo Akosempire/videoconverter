@@ -231,6 +231,16 @@
     session('Batch needs attention'); message(msg);
   }
 
+  function triggerDownload(url, filename){
+    try{
+      const a=document.createElement('a');
+      a.href=url; a.download=filename||'';
+      a.rel='noopener'; a.style.display='none';
+      document.body.appendChild(a); a.click();
+      setTimeout(()=>{ try{a.remove();}catch{} }, 1500);
+      return true;
+    }catch{ return false; }
+  }
   function renderBatchResults(results, errors){
     const bl=$('batch-list'); if(!bl) return;
     bl.hidden=false; bl.innerHTML='';
@@ -242,7 +252,7 @@
       a.style.cssText='width:100%;justify-content:space-between';
       a.innerHTML=`<span style="text-align:left;min-width:0"><strong style="display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.filename}</strong><span style="font:600 10px ui-monospace,monospace">${(r.size/1024/1024).toFixed(1)} MB · MP4</span></span><span>Download →</span>`;
       const wrap=document.createElement('div'); wrap.style.cssText='background:#fff;border:2px solid #111;border-radius:10px;box-shadow:2px 2px 0 #111;padding:8px;display:grid;gap:6px';
-      wrap.innerHTML=`<span style="font:700 11px ui-sans-serif,system-ui">${r.source} → ${r.filename}</span>`;
+      wrap.innerHTML=`<span style="font:700 11px ui-sans-serif,system-ui">${r.source} → ${r.filename}</span><span style="font:600 10px ui-monospace,monospace;color:#6B6B6B;overflow-wrap:anywhere">${r.download_url} · auto-saved to your download folder</span>`;
       wrap.appendChild(a); bl.appendChild(wrap);
     });
     errors.forEach(e=>{
@@ -375,29 +385,40 @@
       $('job-status').textContent = total>1 ? `Batch complete · ${total}/${total}` : 'Ready to download';
       $('job-detail').textContent = total>1 ? `${total} MP4s ready` : `${results[0].filename} · ${size(results[0].size)} · MP4`;
       $('activity-label').textContent='COMPLETE';
-      // primary download is first; batch list shows all
       if(results[0]){ $('download-button').href=results[0].download_url; $('download-button').download=results[0].filename; $('download-button').hidden=false; }
       $('convert-button').querySelector('span').textContent='Convert again';
-      $('export-caption').textContent = total>1 ? `${total} MP4s ready — see batch downloads below.` : 'Your MP4 is ready in the Conversion panel.';
+      $('export-caption').textContent = total>1 ? `${total} MP4s ready — downloading automatically…` : 'Your MP4 is ready — downloading automatically…';
       session(total>1?`Batch complete: ${total} files`:'Conversion complete');
-      message(total>1?`Batch complete: ${total} converted.`:'Conversion complete. Your MP4 is ready to download.','success');
+      message(total>1?`Batch complete: ${total} converted — downloading…`:'Conversion complete. Downloading your MP4…','success');
     } else if(results.length>0){
-      // partial success
       $('job').classList.add('is-complete'); const ji3=$('job-icon'); if(ji3) ji3.classList.add('is-complete');
       $('job-status').textContent=`Partial · ${results.length}/${total}`;
       $('job-detail').textContent=`${results.length} succeeded, ${errors.length} failed`;
       $('activity-label').textContent='PARTIAL';
       if(results[0]){ $('download-button').href=results[0].download_url; $('download-button').download=results[0].filename; $('download-button').hidden=false; }
       $('convert-button').querySelector('span').textContent='Try again';
-      $('export-caption').textContent='Some files failed — check the list below.';
+      $('export-caption').textContent='Some files failed — successful ones are downloading…';
       session(`Batch partial: ${results.length}/${total}`);
-      const firstErr=errors[0]; message(`${firstErr.filename}: ${firstErr.error}  ·  ${results.length} succeeded.`,'error');
+      const firstErr=errors[0]; message(`${firstErr.filename}: ${firstErr.error}  ·  ${results.length} succeeded — downloading available files.`,'error');
     } else {
       failBatch(errors[0]?`${errors[0].filename}: ${errors[0].error}` : 'Batch conversion failed.');
     }
     renderBatchResults(results, errors);
     $('progress').value = results.length?100:0;
     if(results.length) $('progress').value=100;
+    // auto-download: single triggers immediately, batch triggers one-by-one
+    if(results.length){
+      let blocked=false;
+      results.forEach((r,i)=>{
+        setTimeout(()=>{
+          const ok=triggerDownload(r.download_url, r.filename);
+          if(!ok) blocked=true;
+          if(i===results.length-1 && blocked){
+            message('Downloads were blocked by the browser — use the Download buttons below.','error');
+          }
+        }, i===0 ? 500 : 500 + i*900);
+      });
+    }
   });
 
   window.addEventListener('beforeunload', e=>{ if(busy){ e.preventDefault(); e.returnValue=''; } else { objectUrls.forEach(u=>{ try{ URL.revokeObjectURL(u);}catch{} }); } });
