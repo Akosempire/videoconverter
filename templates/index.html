@@ -68,6 +68,15 @@
           <video id="preview" controls playsinline preload="auto" hidden></video>
           <div class="preview-unavailable" id="preview-unavailable" hidden>{{ glyph('film',32) }}<h3>Preview isn’t available for this file</h3><p>Your browser may not support its codec. You can still try converting it to MP4.</p></div>
           <div class="drop-overlay" aria-hidden="true">{{ glyph('plus',36) }} Drop to import your MOV</div>
+          <div class="upload-overlay" id="upload-overlay" aria-hidden="true">
+            <div class="upload-overlay-card">
+              <h3><i>{{ glyph('cloud',14) }}</i> <span id="upload-overlay-title">Uploading your video…</span></h3>
+              <p id="upload-overlay-sub">Sending your source file securely to the converter.</p>
+              <div class="upload-meter" aria-hidden="true"><i id="upload-overlay-fill"></i></div>
+              <div class="upload-overlay-pct" id="upload-overlay-pct">0%</div>
+              <div class="upload-overlay-detail" id="upload-overlay-detail">Keep this tab open until conversion finishes.</div>
+            </div>
+          </div>
         </div>
         <div class="preview-footer"><span class="preview-dot"></span><span id="preview-note">A preview will appear after you add a file</span><span class="preview-fit">SOURCE</span></div>
       </section>

@@ -27,6 +27,13 @@
     document.querySelectorAll('[data-import], #choose-file').forEach(button => button.disabled = value);
     $('convert-button').disabled = value || !file;
     form.setAttribute('aria-busy',String(value));
+    const overlay = $('upload-overlay');
+    if (overlay) {
+      overlay.classList.toggle('is-active', value);
+      overlay.classList.remove('is-converting');
+      overlay.setAttribute('aria-hidden', value ? 'false' : 'true');
+      if (value) { $('upload-overlay-fill').style.width = '0%'; $('upload-overlay-pct').textContent = '0%'; }
+    }
   }
   function readyJob() {
     $('activity-empty').hidden = !!file;
@@ -160,6 +167,7 @@
     $('progress').value = 0;
     $('convert-button').querySelector('span').textContent = 'Try again';
     $('export-caption').textContent = 'Your original file has not changed.';
+    $('upload-overlay').classList.remove('is-active','is-converting');
     session('Conversion failed');
     message(text);
   }
@@ -187,6 +195,9 @@
         const percent = Math.min(100,Math.round(event.loaded / event.total * 100));
         $('progress').value = percent;
         $('job-status').textContent = `Uploading · ${percent}%`;
+        if ($('upload-overlay-fill')) $('upload-overlay-fill').style.width = percent + '%';
+        if ($('upload-overlay-pct')) $('upload-overlay-pct').textContent = percent + '%';
+        if ($('upload-overlay-detail')) $('upload-overlay-detail').textContent = `Uploading · ${percent}% — sending your source file`;
       }
     });
     request.upload.addEventListener('load', () => {
@@ -196,6 +207,11 @@
       $('job-detail').textContent = 'Upload complete. Larger videos can take a few minutes.';
       $('activity-label').textContent = 'CONVERTING';
       $('convert-button').querySelector('span').textContent = 'Converting…';
+      $('upload-overlay-title').textContent = 'Converting your video…';
+      $('upload-overlay-sub').textContent = 'Upload complete. This can take a few minutes.';
+      $('upload-overlay-detail').textContent = 'Hang tight — building your MP4';
+      $('upload-overlay-pct').textContent = 'Converting…';
+      $('upload-overlay').classList.add('is-converting');
       session('Converting your video');
     });
     request.addEventListener('load', () => {
@@ -203,6 +219,13 @@
       try { result = JSON.parse(request.responseText); } catch { fail(request.status === 413 ? 'This file exceeds the upload limit. Try a smaller MOV file.' : 'The server returned an unexpected response. Please try again.'); return; }
       if (request.status < 200 || request.status >= 300 || !result.download_url) { fail(result.error || 'Conversion could not finish. Try another MOV file.'); return; }
       $('progress').value = 100;
+      $('upload-overlay-fill').style.width = '100%';
+      $('upload-overlay').classList.remove('is-converting');
+      $('upload-overlay-pct').textContent = '100%';
+      $('upload-overlay-title').textContent = 'Ready! ✓';
+      $('upload-overlay-sub').textContent = `${result.filename} · ${size(result.size)} · MP4`;
+      $('upload-overlay-detail').textContent = 'Your MP4 is ready in the Conversion panel.';
+      setTimeout(()=> $('upload-overlay').classList.remove('is-active'), 1400);
       $('job').classList.add('is-complete');
       $('job-icon').classList.add('is-complete');
       $('job-status').textContent = 'Ready to download';
