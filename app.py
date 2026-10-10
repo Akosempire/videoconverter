@@ -36,12 +36,36 @@ def convert_mov_to_mp4(
                 )
                 export_clip = video_clip.resized(new_size=dimensions)
         crf = {"standard": "23", "high": "18", "small": "28"}[quality]
+        # Heavy-file fast path: for UGC/large sources the proxy (30-60s) would
+        # 502 before ffmpeg finishes. Auto-switch to ultrafast and cap to 720p
+        # when the source is clearly heavy, keeping quality choice via CRF only.
+        try:
+            src_bytes = input_path.stat().st_size
+        except Exception:
+            src_bytes = 0
+        is_heavy = src_bytes > 150 * 1024 * 1024 or max(video_clip.size) > 1920 or getattr(video_clip, "duration", 0) > 120
+        preset = "ultrafast" if is_heavy else "fast"
+        # If auto-capped, ensure we don't upscale; pick 720 when source >720 and user left original
+        auto_limited = False
+        if is_heavy and resolution == "original" and max(video_clip.size) > 1280:
+            limit = 720
+            scale = min(1, limit / min(video_clip.size), (limit * 16 / 9) / max(video_clip.size))
+            if scale < 1:
+                dimensions = tuple(max(2, int(d * scale) // 2 * 2) for d in video_clip.size)
+                # Replace prior resize if any: close previous export_clip first
+                if export_clip is not video_clip:
+                    try:
+                        export_clip.close()
+                    except Exception:
+                        pass
+                export_clip = video_clip.resized(new_size=dimensions)
+                auto_limited = True
         export_clip.write_videofile(
             str(output_path),
             codec="libx264",
             audio_codec="aac",
             audio=keep_audio,
-            ffmpeg_params=["-preset", "fast", "-crf", crf, "-threads", "2"],
+            ffmpeg_params=["-preset", preset, "-crf", crf, "-threads", "2"],
             logger=None,
         )
     finally:

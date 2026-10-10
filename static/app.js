@@ -147,24 +147,26 @@
     if(busy) return;
     const incoming=[...fileList];
     if(incoming.length===0) return;
-    // validate batch: allow up to 12, each MOV ≤500MB, total items reasonable
     if(files.length + incoming.length > 20){ message('You can queue up to 20 files at a time.'); return; }
-    let added=0, skipped=[];
+    let added=0, skipped=[], heavy=[];
     incoming.forEach(fl=>{
       if(!/\.mov$/i.test(fl.name)){ skipped.push(`${fl.name}: not a MOV`); return; }
       if(fl.size===0){ skipped.push(`${fl.name}: empty`); return; }
       if(fl.size>500*1024*1024){ skipped.push(`${fl.name}: exceeds 500 MB`); return; }
-      // dedupe by name+size
       if(files.some(f=>f.name===fl.name && f.size===fl.size)) return;
       files.push(fl); objectUrls.push(null); added++;
+      if(fl.size>150*1024*1024) heavy.push(fl.name);
     });
     if(skipped.length) message(skipped.slice(0,4).join('  ·  ') + (skipped.length>4?`  ·  +${skipped.length-4} more`:''));
     if(added===0 && skipped.length===0) return;
     if(added>0){
-      // if first batch, active stays 0; otherwise keep current
       renderQueue();
       session(`${files.length} file${files.length>1?'s':''} ready`);
       $('feedback').replaceChildren();
+      if(heavy.length){
+        const n=document.createElement('div'); n.className='alert error'; n.textContent=`Heads-up: ${heavy.slice(0,2).join(', ')}${heavy.length>2?` +${heavy.length-2} more`:''} look heavy (>150 MB). The server will auto-switch to ultrafast + 720p to avoid a gateway 502. For best odds pick Smaller file or trim to <2 min.`;
+        $('feedback').appendChild(n);
+      }
       if(files.length===1) preview.addEventListener('loadedmetadata', ()=>{}, {once:true});
     }
     input.value='';
