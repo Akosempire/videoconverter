@@ -14,7 +14,10 @@ def resolve_input_and_output(input_path=None, output_path=None):
                 "Place a .mov file in the current folder or pass an explicit path."
             )
     else:
-        mov_files = sorted(Path.cwd().glob("*.mov")) + sorted(Path.cwd().glob("*.MOV"))
+        mov_files = sorted(
+            path for path in Path.cwd().iterdir()
+            if path.is_file() and path.suffix.lower() == ".mov"
+        )
         if not mov_files:
             raise FileNotFoundError(
                 "No .mov file found in the current folder. "

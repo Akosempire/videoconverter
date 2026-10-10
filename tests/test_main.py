@@ -11,7 +11,7 @@ def test_convert_mov_to_mp4_creates_output(tmp_path):
     clip.write_videofile(str(input_path), fps=24, codec="libx264", audio=False)
     clip.close()
 
-    convert_mov_to_mp4(str(input_path), str(output_path))
+    main.convert_mov_to_mp4(str(input_path), str(output_path))
 
     assert output_path.exists()
     assert output_path.stat().st_size > 0

@@ -47,6 +47,16 @@ def create_app(test_config=None):
     def index():
         return render_template("index.html")
 
+    @app.route("/design-system", methods=["GET"])
+    def design_system():
+        return render_template("design-system.html")
+
+    @app.errorhandler(413)
+    def upload_too_large(error):
+        return render_template(
+            "index.html", error="This file exceeds the 500 MB upload limit."
+        ), 413
+
     @app.route("/convert", methods=["POST"])
     def convert():
         uploaded_file = request.files.get("video")

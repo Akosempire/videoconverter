@@ -1,0 +1,27 @@
+﻿{% from 'components/ui.html' import icon, button, panel_title, property %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Frame — Design system</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+<header class="app-header"><a class="brand" href="/">{{ icon('film', 24) }}&nbsp; frame<span class="brand-dot">.</span></a><span class="workspace-name">Component library</span><a class="github-link" href="/">Back to converter ↗</a></header>
+<main>
+<span class="eyebrow">FOUNDATIONS / COMPONENTS</span><h1>A system built for the edit.</h1>
+<p class="design-intro">Charcoal surfaces. Precise spacing. Warm actions and color-coded media. These are the shared components behind the Frame workspace, derived from the supplied visual references.</p>
+<div class="design-grid">
+<section class="panel">{{ panel_title('Color palette', 'FOUNDATIONS') }}<div class="panel-body component-row">
+{% for name, token, hex in [('Workspace','bg','#101112'),('Panel','panel','#18191b'),('Surface','surface','#202123'),('Action','accent','#edca61'),('Video','blue','#5baff4'),('Audio','green','#55c79a')] %}
+<div class="swatch"><i style="background: var(--{{ token }})"></i>{{ name }}<br>{{ hex }}</div>
+{% endfor %}</div></section>
+<section class="panel">{{ panel_title('Workspace buttons', 'COMPONENTS') }}<div class="panel-body component-row">{{ button('Primary action','arrow','primary') }}{{ button('Import media','upload') }}<button type="button" class="button button--primary" disabled>Converting…</button><button type="button" class="icon-button" aria-label="Example add icon">{{ icon('plus') }}</button></div><div class="panel-body muted">Keyboard focus, hover, and disabled states are shared across the workspace. These buttons are visual specimens.</div></section>
+<section class="panel">{{ panel_title('Raised buttons', 'REFERENCE VARIANTS') }}<div class="panel-body component-row">{{ button('Blue action','arrow','blue') }}{{ button('Coral action','arrow','coral') }}{{ button('Purple action','arrow','purple') }}{{ button('Black action','arrow','black') }}</div><div class="panel-body muted">Rounded shapes, inset highlights, and soft shadows from the button reference. Colors are deepened for readable white labels.</div></section>
+<section class="panel">{{ panel_title('Spacing scale', '4 PX BASE') }}<div class="panel-body">{% for size in [4,8,12,16,20,24,32] %}<div class="spacing-sample"><span>{{ size }} px</span><i style="width: {{ size }}px"></i></div>{% endfor %}</div></section>
+<section class="panel">{{ panel_title('Properties and status', 'COMPONENTS') }}<div class="panel-body">{{ property('Codec','H.264') }}{{ property('Audio','Preserved','green') }}<br><span class="badge badge--green">PRESERVED</span><br><br><div class="alert success">{{ icon('check') }} Conversion complete.</div><div class="alert error">Choose a MOV file to continue.</div></div></section>
+<section class="panel">{{ panel_title('Type and surface', 'FOUNDATIONS') }}<div class="panel-body"><span class="eyebrow">EYEBROW / 9 PX</span><h1>Tell your next story.</h1><br><p>Body / 13 px — a familiar system font stack.</p><br><span class="timecode">00:01:24 / MONOSPACE</span><br><br><p class="muted">Panel radius 8 px · Button radius 5 px · Raised button radius 12 px</p></div></section>
+</div>
+</main>
+</body>
+</html>
