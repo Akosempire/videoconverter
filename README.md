@@ -1,47 +1,51 @@
 # MOV to MP4 Converter
-A simple Python script to convert .mov files to .mp4 format using the moviepy library. The script ensures efficient video encoding with audio support by leveraging ffmpeg.
 
-I do screen recording on my MacBook, which records videos in MOV format. These files take up a lot of space. Therefore, I created this script with the help of GitHub Copilot. Now, I can easily convert my MOV files to MP4 without using any third-party apps or websites.
+A simple Python script to convert .mov files to .mp4 using MoviePy and FFmpeg.
 
+## Prerequisites
 
+- Python 3.10+
+- FFmpeg installed and added to PATH
+- MoviePy package
 
-## Installation
-### Prerequisites
-ffmpeg: Required for video processing.
-moviepy: Python library for video editing.
+## Install on Windows
 
-### Install ffmpeg
-On macOS, you can install ffmpeg using Homebrew:
-
-```sh
-brew install ffmpeg
-```
-
-### Install moviepy
-You can install moviepy using pip:
-
-```sh
+```powershell
 git clone https://github.com/melihteke/moviepy-mov2mp4.git
-
 cd moviepy-mov2mp4
+py -m pip install -r requirements.txt
 ```
 
-```sh
-pip install moviepy
+Install FFmpeg if it is not already available:
 
-or
-
-pip install -r requirements.txt
+```powershell
+winget install --id Gyan.FFmpeg -e --source winget
 ```
 
-### Example
-Replace "test.mov" with the path to your .mov file.
-Replace "output.mp4" with the desired output path for the .mp4 file.
+Then confirm it is available:
 
-
-### Run the script.
-
-```sh
-python main.py
+```powershell
+ffmpeg -version
 ```
 
+## Usage
+
+Run the converter with your own input and output paths:
+
+```powershell
+py main.py "C:\path\to\input.mov" "C:\path\to\output.mp4"
+```
+
+You can also use the defaults:
+
+```powershell
+py main.py
+```
+
+This will read `test.mov` and write `output.mp4` in the project folder.
+
+## Notes
+
+- The script keeps audio in the converted video.
+- It creates the destination folder automatically if needed.
+- The output is encoded with H.264/AAC for broad compatibility.
