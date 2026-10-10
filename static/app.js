@@ -263,7 +263,10 @@
 
   form.addEventListener('submit', async e=>{
     e.preventDefault();
-    if(busy || files.length===0) return;
+    if(busy || files.length===0){
+      if(files.length===0) message('Add one or more MOV files first — then Convert will run.', 'error');
+      return;
+    }
     const baseQuality=$('quality').value, baseRes=$('resolution').value, keepAudio=$('keep-audio').checked;
     generation+=1; const thisGen=generation;
     $('feedback').replaceChildren();

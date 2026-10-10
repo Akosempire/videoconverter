@@ -18,7 +18,7 @@
 <main>
   <div class="workspace-heading"><div><span class="eyebrow">YOUR WORKSPACE</span><h1>Good footage. Any screen.</h1><p>Convert MOV to MP4, ready to play and share.</p></div><span class="session-status" id="session-status"><i></i> Ready when you are</span></div>
   <form id="converter-form" action="{{ url_for('convert') }}" method="post" enctype="multipart/form-data">
-    <label class="native-file" for="video">Choose MOV files<input type="file" id="video" name="video" accept=".mov,.MOV,video/quicktime" multiple required aria-describedby="file-guidance"></label>
+    <label class="native-file" for="video">Choose MOV files<input type="file" id="video" name="video" accept=".mov,.MOV,video/quicktime" multiple aria-describedby="file-guidance"></label>
     <div class="workspace-grid">
       <aside class="panel media-panel">
         <div class="panel-heading"><h2>{{ glyph('folder',16) }} Media</h2><span class="count" id="file-count">0</span></div>

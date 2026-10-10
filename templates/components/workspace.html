@@ -1,6 +1,6 @@
 {% from 'components/editor.html' import glyph %}
 {% macro action(label, symbol='', id='', primary=false, type='button') -%}
-<button type="{{ type }}" class="button {{ 'button-primary' if primary else 'button-secondary' }}"{% if id %} id="{{ id }}"{% endif %}>{{ glyph(symbol, 17) if symbol }}<span>{{ label }}</span></button>
+<button type="{{ type }}" class="button {{ 'button-primary' if primary else 'button-secondary' }}"{% if id %} id="{{ id }}"{% endif %}{% if type=='submit' %} formnovalidate{% endif %}>{{ glyph(symbol, 17) if symbol }}<span>{{ label }}</span></button>
 {%- endmacro %}
 {% macro heading(title, label='') -%}
 <div class="panel-heading"><h2>{{ title }}</h2>{% if label %}<span class="panel-label">{{ label }}</span>{% endif %}</div>
