@@ -91,6 +91,18 @@ def create_app(test_config=None):
     def upload_too_large(error):
         return error_response("This file exceeds the 500 MB upload limit.", 413)
 
+    @app.errorhandler(500)
+    def internal_error(error):
+        return error_response("The converter hit an unexpected error. Try a shorter or smaller MOV.", 500)
+
+    @app.errorhandler(502)
+    def bad_gateway(error):
+        return error_response("The server is busy or the video is too heavy to convert right now. Try a shorter/smaller MOV or wait a minute and retry.", 502)
+
+    @app.errorhandler(504)
+    def gateway_timeout(error):
+        return error_response("Conversion took too long and timed out. Try a shorter clip or a lower quality setting.", 504)
+
     @app.route("/convert", methods=["POST"])
     def convert():
         files = request.files.getlist("video")

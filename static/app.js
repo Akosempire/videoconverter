@@ -338,9 +338,20 @@
           });
           xhr.addEventListener('load', ()=>{
             let data; try{ data=JSON.parse(xhr.responseText);}catch{
-              const raw=xhr.responseText||''; const m=raw.match(/<div class="alert[^"]*">([^<]+)<\/div>/)||raw.match(/<title[^>]*>([^<]+)<\/title>/);
-              const msg=(m?m[1].trim():'')||`Server returned ${xhr.status||'an unexpected'} response.`;
-              reject(new Error(msg.slice(0,300)));
+              const raw=xhr.responseText||'';
+              if(xhr.status===502 || raw.includes('502') || raw.toLowerCase().includes('bad gateway')){
+                reject(new Error('Gateway 502: the server is busy or the video is too heavy. Try a shorter/smaller MOV (e.g. under 2 min or 720p) and retry.'));
+                return;
+              }
+              if(xhr.status===504 || raw.toLowerCase().includes('gateway timeout')){
+                reject(new Error('Gateway timeout: conversion took too long. Try a shorter clip or lower quality.'));
+                return;
+              }
+              const m=raw.match(/<div class="alert[^"]*">([^<]+)<\/div>/)||raw.match(/<title[^>]*>([^<]+)<\/title>/);
+              const htmlMsg=m?m[1].trim():'';
+              if(htmlMsg) { reject(new Error(htmlMsg.slice(0,300))); return; }
+              const snippet=raw.slice(0,220).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+              reject(new Error(snippet ? `Server returned ${xhr.status||'an unexpected'} response: ${snippet.slice(0,200)}` : `Server returned ${xhr.status||'an unexpected'} response.`));
               return;
             }
             // Backend batch vs single shapes
