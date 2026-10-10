@@ -39,14 +39,28 @@ def main():
 
     check_ffmpeg()
     app = create_app()
-    logging.basicConfig(level=logging.INFO)
-    logging.info("Starting video converter on 0.0.0.0:%s", port)
+
+    # Trust Pxxl/host proxy headers so url_for and logging see the real client
+    try:
+        from werkzeug.middleware.proxy_fix import ProxyFix
+
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+    except Exception:
+        pass
+
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    logging.info("Starting video converter on 0.0.0.0:%s (threads=8, channel_timeout=300)", port)
     serve(
         app,
         host="0.0.0.0",
         port=port,
-        threads=2,
+        threads=8,
+        channel_timeout=300,
+        connection_limit=200,
+        backlog=2048,
         max_request_body_size=app.config["MAX_CONTENT_LENGTH"],
+        ident="videoconverter",
+        clear_untrusted_proxy_headers=True,
     )
 
 

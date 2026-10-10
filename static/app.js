@@ -339,12 +339,16 @@
           xhr.addEventListener('load', ()=>{
             let data; try{ data=JSON.parse(xhr.responseText);}catch{
               const raw=xhr.responseText||'';
+              if(xhr.status===503 || raw.includes('503') || raw.toLowerCase().includes('storage') || raw.toLowerCase().includes('critically low')){
+                reject(new Error('Server storage is low. Wait a minute and retry, or try a smaller file.'));
+                return;
+              }
               if(xhr.status===502 || raw.includes('502') || raw.toLowerCase().includes('bad gateway')){
-                reject(new Error('Gateway 502: the server is busy or the video is too heavy. Try a shorter/smaller MOV (e.g. under 2 min or 720p) and retry.'));
+                reject(new Error('Gateway 502: the server is busy or the video is too heavy. Try a shorter/smaller MOV (e.g. under 2 min, 720p, Smaller file) and retry.'));
                 return;
               }
               if(xhr.status===504 || raw.toLowerCase().includes('gateway timeout')){
-                reject(new Error('Gateway timeout: conversion took too long. Try a shorter clip or lower quality.'));
+                reject(new Error('Gateway timeout: conversion took too long. Try a shorter clip, 720p, or Smaller file.'));
                 return;
               }
               const m=raw.match(/<div class="alert[^"]*">([^<]+)<\/div>/)||raw.match(/<title[^>]*>([^<]+)<\/title>/);
