@@ -38,7 +38,7 @@ python app.py
 Then open:
 
 ```text
-http://localhost:5000
+http://localhost:3000
 ```
 
 Upload a `.mov` file and download the converted `.mp4` version.
@@ -56,6 +56,49 @@ See [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) for reusable Jinja components, referenc
 geometry, colors, spacing, and behavior. No frontend build step is needed.
 
 Run the conversion tests with `python -m pytest -q` (install `pytest` first).
+
+## Production deployment (Pxxl)
+
+Use the repository's **Dockerfile** build mode so FFmpeg is installed in the
+final runtime image. Installing the Python `moviepy` package alone does not
+guarantee that an FFmpeg executable exists on every Linux distribution.
+
+| Setting | Value |
+| --- | --- |
+| Source branch | `main` |
+| Base directory | repository root (`/`) |
+| Build mode | Dockerfile |
+| Dockerfile path | `Dockerfile` |
+| Application port | `3000` |
+| Environment variable | `PORT=3000` |
+| Start command | image default (`python server.py`) |
+| Health check path, if configurable | `/healthz` |
+
+Remove the old `python main.py` start override. It invokes the file-conversion
+CLI and does not start an HTTP server. The Dockerfile handles dependency
+installation; do not carry over the Python buildpack's install/build commands.
+If the dashboard requires an explicit start command, use `python server.py`.
+
+`server.py` verifies that FFmpeg runs before accepting requests, then starts
+Waitress on `0.0.0.0:$PORT` (default `3000`). `python app.py` starts the same server.
+The original `python main.py input.mov output.mp4` command remains available.
+
+For hosts without Dockerfile support, use a runtime image with system FFmpeg
+installed and start `python server.py`; set `IMAGEIO_FFMPEG_EXE` and
+`FFMPEG_BINARY` to that executable's path if discovery fails. Installing FFmpeg
+only on a separate build machine does not install it in the application runtime.
+
+To test the Docker deployment locally where Docker is installed:
+
+```sh
+docker build -t videoconverter .
+docker run --rm -p 3000:3000 videoconverter
+```
+
+The image runs as an unprivileged user. Uploaded files are temporary container
+data unless a persistent writable volume is mounted at `/app/uploads`.
+
+Pxxl configuration reference: https://docs.pxxl.app/deploy/configuration
 
 ## Terminal usage
 

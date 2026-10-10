@@ -1,2 +1,3 @@
 Flask
 moviepy
+waitress>=3.0,<4

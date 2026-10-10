@@ -1,12 +1,13 @@
 from pathlib import Path
 
 from flask import Flask, render_template, request, send_from_directory, url_for
-from moviepy import VideoFileClip
 from werkzeug.utils import secure_filename
 
 
 def convert_mov_to_mp4(input_path, output_path):
     """Convert a MOV file to MP4 while preserving audio."""
+    from moviepy import VideoFileClip
+
     input_path = Path(input_path)
     output_path = Path(output_path)
 
@@ -46,6 +47,10 @@ def create_app(test_config=None):
     @app.route("/", methods=["GET"])
     def index():
         return render_template("index.html")
+
+    @app.get("/healthz")
+    def health():
+        return {"status": "ok"}
 
     @app.route("/design-system", methods=["GET"])
     def design_system():
@@ -91,4 +96,6 @@ def create_app(test_config=None):
 
 
 if __name__ == "__main__":
-    create_app().run(debug=True, host="0.0.0.0", port=5000)
+    from server import main
+
+    main()
