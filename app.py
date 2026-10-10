@@ -93,49 +93,103 @@ def create_app(test_config=None):
 
     @app.route("/convert", methods=["POST"])
     def convert():
-        uploaded_file = request.files.get("video")
-        if not uploaded_file or not uploaded_file.filename:
+        files = request.files.getlist("video")
+        if not files or not any(f.filename for f in files):
+            files = request.files.getlist("videos")
+        # Single-file fallback for non-batch clients
+        if not files or not any(f.filename for f in files):
+            single = request.files.get("video")
+            files = [single] if single and single.filename else []
+        if not files:
             return error_response("Please choose a MOV file to upload.", 400)
-
-        filename = secure_filename(uploaded_file.filename)
-        if not filename.lower().endswith(".mov"):
-            return error_response("Only .mov files are supported.", 400)
 
         quality = request.form.get("quality", "standard")
         resolution = request.form.get("resolution", "original")
-        # Preserve the original API default when no option fields were sent.
         keep_audio = request.form.get("keep_audio") == "yes" if "quality" in request.form else True
         if quality not in {"standard", "high", "small"} or resolution not in {"original", "1080", "720"}:
             return error_response("Choose a supported quality and resolution.", 400)
 
-        input_path = upload_dir / filename
-        uploaded_file.save(input_path)
+        expects_json = (
+            "application/json" in request.headers.get("Accept", "")
+            or request.accept_mimetypes.accept_json
+            or request.accept_mimetypes.best == "application/json"
+            or request.is_json
+            or request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        )
 
-        output_path = upload_dir / f"{input_path.stem}.mp4"
-        try:
-            convert_mov_to_mp4(str(input_path), str(output_path), quality=quality, resolution=resolution, keep_audio=keep_audio)
-        except Exception as exc:
-            app.logger.exception("Video conversion failed")
-            detail = str(exc).strip()
-            if "moov atom not found" in detail or "Invalid data" in detail:
-                return error_response("This file doesn’t look like a valid MOV. Try another QuickTime/MOV export.", 500)
-            if "No such file" in detail or "not found" in detail.lower():
-                return error_response("The uploaded file couldn’t be read. Please try uploading again.", 500)
-            return error_response("This video could not be converted. Make sure it is a valid MOV file and try again.", 500)
+        results = []
+        errors = []
+        for uploaded_file in files:
+            if not uploaded_file or not uploaded_file.filename:
+                continue
+            filename = secure_filename(uploaded_file.filename)
+            if not filename.lower().endswith(".mov"):
+                errors.append({"filename": uploaded_file.filename, "error": "Only .mov files are supported."})
+                continue
+            if uploaded_file.content_length is not None and uploaded_file.content_length > app.config["MAX_CONTENT_LENGTH"]:
+                errors.append({"filename": filename, "error": "This file exceeds the 500 MB upload limit."})
+                continue
+            input_path = upload_dir / filename
+            try:
+                uploaded_file.save(input_path)
+                if input_path.stat().st_size > app.config["MAX_CONTENT_LENGTH"]:
+                    input_path.unlink(missing_ok=True)
+                    errors.append({"filename": filename, "error": "This file exceeds the 500 MB upload limit."})
+                    continue
+                if input_path.stat().st_size == 0:
+                    errors.append({"filename": filename, "error": "This file is empty."})
+                    continue
+            except Exception:
+                errors.append({"filename": filename, "error": "Could not save the uploaded file."})
+                continue
 
-        if request.accept_mimetypes.best == "application/json":
-            return {
+            output_path = upload_dir / f"{input_path.stem}.mp4"
+            try:
+                convert_mov_to_mp4(str(input_path), str(output_path), quality=quality, resolution=resolution, keep_audio=keep_audio)
+            except Exception as exc:
+                app.logger.exception("Video conversion failed for %s", filename)
+                detail = str(exc).strip()
+                if "moov atom not found" in detail or "Invalid data" in detail:
+                    errors.append({"filename": filename, "error": "This file doesn’t look like a valid MOV."})
+                elif "No such file" in detail or "not found" in detail.lower():
+                    errors.append({"filename": filename, "error": "The uploaded file couldn’t be read."})
+                else:
+                    errors.append({"filename": filename, "error": "This video could not be converted."})
+                continue
+
+            results.append({
                 "download_url": url_for("download_file", filename=output_path.name),
                 "filename": output_path.name,
+                "source": filename,
                 "size": output_path.stat().st_size,
-            }
+            })
 
-        return render_template(
-            "index.html",
-            success=True,
-            download_url=url_for("download_file", filename=output_path.name),
-            filename=output_path.name,
-        )
+        # Single-file legacy response keeps exact shape for existing clients/tests
+        if len(files) == 1 and not errors and len(results) == 1:
+            if expects_json:
+                return results[0]
+            return render_template(
+                "index.html",
+                success=True,
+                download_url=results[0]["download_url"],
+                filename=results[0]["filename"],
+            )
+        if len(files) == 1 and errors:
+            return error_response(errors[0]["error"], 400 if "Only .mov" in errors[0]["error"] or "empty" in errors[0]["error"].lower() else 500)
+
+        # Batch response
+        if expects_json:
+            status = 200 if results else (400 if errors and not results else 500)
+            return {"results": results, "errors": errors, "count": len(results)}, status
+        # Non-JSON batch fallback renders first success
+        if results:
+            return render_template(
+                "index.html",
+                success=True,
+                download_url=results[0]["download_url"],
+                filename=results[0]["filename"],
+            )
+        return error_response(errors[0]["error"] if errors else "Batch conversion failed.", 400 if errors else 500)
 
     @app.route("/download/<path:filename>")
     def download_file(filename):

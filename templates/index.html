@@ -18,15 +18,17 @@
 <main>
   <div class="workspace-heading"><div><span class="eyebrow">YOUR WORKSPACE</span><h1>Good footage. Any screen.</h1><p>Convert MOV to MP4, ready to play and share.</p></div><span class="session-status" id="session-status"><i></i> Ready when you are</span></div>
   <form id="converter-form" action="{{ url_for('convert') }}" method="post" enctype="multipart/form-data">
-    <label class="native-file" for="video">Choose a MOV file<input type="file" id="video" name="video" accept=".mov,.MOV,video/quicktime" required aria-describedby="file-guidance"></label>
+    <label class="native-file" for="video">Choose MOV files<input type="file" id="video" name="video" accept=".mov,.MOV,video/quicktime" multiple required aria-describedby="file-guidance"></label>
     <div class="workspace-grid">
       <aside class="panel media-panel">
         <div class="panel-heading"><h2>{{ glyph('folder',16) }} Media</h2><span class="count" id="file-count">0</span></div>
         <div class="media-body">
-          <div class="media-empty" id="media-empty"><span class="muted-icon"><svg class="mini-isometric" viewBox="0 0 48 48" aria-hidden="true"><path d="m24 5 17 9.5v19L24 43 7 33.5v-19L24 5Z" fill="#fff" stroke="#111" stroke-width="2"/><path d="m7 14.5 17 10 17-10M24 24.5V43" fill="none" stroke="#111" stroke-width="1.7"/><path d="M19 17v7l7-4-7-3Z" fill="#FF5A5A" stroke="#111" stroke-width="1.4"/></svg></span><h3>Your footage lives here</h3><p>Add a MOV file to see its details and preview.</p><button type="button" class="text-button" data-import>{{ glyph('plus',15) }} Add a file</button></div>
+          <div class="media-empty" id="media-empty"><span class="muted-icon"><svg class="mini-isometric" viewBox="0 0 48 48" aria-hidden="true"><path d="m24 5 17 9.5v19L24 43 7 33.5v-19L24 5Z" fill="#fff" stroke="#111" stroke-width="2"/><path d="m7 14.5 17 10 17-10M24 24.5V43" fill="none" stroke="#111" stroke-width="1.7"/><path d="M19 17v7l7-4-7-3Z" fill="#FF5A5A" stroke="#111" stroke-width="1.4"/></svg></span><h3>Your footage lives here</h3><p>Add MOV files to see details and previews.</p><button type="button" class="text-button" data-import>{{ glyph('plus',15) }} Add files</button></div>
+          <div id="media-list" hidden></div>
           <div class="media-card" id="media-card" hidden><div class="media-thumbnail"><img id="thumbnail" alt="Uploaded video frame" hidden><span id="thumbnail-fallback">{{ glyph('film',36) }}</span><span class="file-type">MOV</span><span class="thumbnail-duration" id="thumbnail-duration"></span></div><div class="media-card-info"><strong id="source-name"></strong><span id="source-size"></span></div></div>
           <dl class="source-details" id="source-details" hidden><div><dt>Duration</dt><dd id="source-duration">Reading…</dd></div><div><dt>Dimensions</dt><dd id="source-resolution">Reading…</dd></div><div><dt>Source format</dt><dd>QuickTime / MOV</dd></div></dl>
-          <div class="media-actions" id="media-actions" hidden><button type="button" class="text-button" data-import>Replace file</button><button type="button" class="icon-button" id="remove-file" aria-label="Remove file" title="Remove file">{{ glyph('trash',16) }}</button></div>
+          <div class="media-actions" id="media-actions" hidden><button type="button" class="text-button" data-import>Add more</button><button type="button" class="icon-button" id="remove-file" aria-label="Clear all" title="Clear all">{{ glyph('trash',16) }}</button></div>
+          <div id="batch-list" hidden style="margin-top:12px;display:grid;gap:8px"></div>
         </div>
         <div class="panel-note">{{ glyph('lock',14) }} Your original file stays unchanged.</div>
       </aside>
@@ -64,7 +66,7 @@
               <path d="m267 66 8 6-8 6V66Z" fill="#111"/>
               <circle cx="97" cy="101" r="4" fill="#FF5A5A" stroke="#111" stroke-width="1.6"/>
             </svg>
-          </div><span class="format-pill">MOV <span>→</span> MP4</span><h2>Your next video starts here.</h2><p>Drop your MOV file into the workspace,<br>or choose one from your device.</p>{{ action('Choose a video','upload','choose-file',true) }}<span class="file-guidance" id="file-guidance">MOV files · Up to 500 MB · One at a time</span></div>
+          </div><span class="format-pill">MOV <span>→</span> MP4</span><h2>Your next video starts here.</h2><p>Drop your MOV file into the workspace,<br>or choose one from your device.</p>{{ action('Choose a video','upload','choose-file',true) }}<span class="file-guidance" id="file-guidance">MOV files · Up to 500 MB each · Batch supported</span></div>
           <video id="preview" controls playsinline preload="auto" hidden></video>
           <div class="preview-unavailable" id="preview-unavailable" hidden>{{ glyph('film',32) }}<h3>Preview isn’t available for this file</h3><p>Your browser may not support its codec. You can still try converting it to MP4.</p></div>
           <div class="drop-overlay" aria-hidden="true">{{ glyph('plus',36) }} Drop to import your MOV</div>
