@@ -11,8 +11,16 @@ from werkzeug.utils import secure_filename
 def convert_mov_to_mp4(
     input_path, output_path, *, quality="standard", resolution="original", keep_audio=True
 ):
-    """Convert MOV with the selected quality, size limit, and audio preference."""
-    from moviepy import VideoFileClip
+    """Convert MOV to MP4. Prefers raw ffmpeg for reliability; falls back to moviepy only if needed.
+
+    Offline you saw this work fine — on the host the moviepy probe (ffmpeg_parse_infos)
+    was choking on some MOVs (e.g. HEVC/ProRes from phones) and turning into a 500 → 502
+    while ffmpeg itself handles the file. Heavy UGC files also timed the proxy out, so we
+    auto-switch to ultrafast + 720p-cap when the source is clearly heavy.
+    """
+    import os
+    import shutil
+    import subprocess
 
     input_path = Path(input_path)
     output_path = Path(output_path)
@@ -21,45 +29,130 @@ def convert_mov_to_mp4(
         raise FileNotFoundError(f"Input file not found: {input_path}")
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        src_bytes = input_path.stat().st_size
+    except Exception:
+        src_bytes = 0
+
+    # Resolve ffmpeg binary: honour env, then PATH, then moviepy config
+    ffmpeg = os.environ.get("FFMPEG_BINARY") or os.environ.get("IMAGEIO_FFMPEG_EXE") or shutil.which("ffmpeg")
+    if not ffmpeg:
+        try:
+            from moviepy.config import FFMPEG_BINARY as _MP_FFMPEG
+
+            ffmpeg = _MP_FFMPEG
+        except Exception:
+            ffmpeg = "ffmpeg"
+
+    # Probe dimensions/duration for heavy-file fast path and resolution scaling.
+    # Use ffprobe via the same binary (ffmpeg - probes lightly) — failures are non-fatal.
+    probe_w = probe_h = None
+    probe_dur = 0
+    try:
+        ffprobe = ffmpeg.replace("ffmpeg", "ffprobe") if "ffmpeg" in ffmpeg else "ffprobe"
+        # Prefer ffprobe if present, else fall back to ffmpeg probe via moviepy helpers
+        if shutil.which(ffprobe):
+            out = subprocess.run(
+                [ffprobe, "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height,duration", "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", str(input_path)],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=12,
+            )
+            if out.stdout:
+                vals = [v.strip() for v in out.stdout.strip().splitlines() if v.strip()]
+                # ffprobe with this format prints width, height, duration lines
+                nums = []
+                for v in vals:
+                    try:
+                        nums.append(float(v) if "." in v else int(float(v)))
+                    except Exception:
+                        continue
+                if len(nums) >= 2:
+                    probe_w, probe_h = int(nums[0]), int(nums[1])
+                    if len(nums) >= 3:
+                        probe_dur = float(nums[2])
+    except Exception:
+        pass
+
+    crf = {"standard": "23", "high": "18", "small": "28"}[quality]
+    is_heavy = src_bytes > 150 * 1024 * 1024 or (probe_w and max(probe_w, probe_h or 0) > 1920) or probe_dur > 120
+    preset = "ultrafast" if is_heavy else "fast"
+
+    # Build ffmpeg scale filter when a limit is requested (or auto-capped for heavy originals)
+    vf = None
+    target_limit = None
+    if resolution != "original":
+        target_limit = int(resolution)
+    elif is_heavy and (probe_w and max(probe_w, probe_h or 0) > 1280):
+        target_limit = 720
+
+    if target_limit is not None and probe_w and probe_h:
+        # Scale so the short side ≤ limit and long side ≤ limit*16/9, never upscale, keep even dimensions
+        # ffmpeg scale with force_original_aspect_ratio and eval
+        # Use: scale="min(iw,limit)":trunc(ow/dar/2)*2 etc — simpler: compute scale in Python
+        scale = min(1, target_limit / min(probe_w, probe_h), (target_limit * 16 / 9) / max(probe_w, probe_h))
+        if scale < 1:
+            nw = max(2, int(probe_w * scale) // 2 * 2)
+            nh = max(2, int(probe_h * scale) // 2 * 2)
+            vf = f"scale={nw}:{nh}:flags=bicubic"
+
+    # Primary path: raw ffmpeg — no moviepy probe, so no ffmpeg_parse_infos crash
+    cmd = [ffmpeg, "-y", "-hide_banner", "-loglevel", "error", "-i", str(input_path)]
+    if vf:
+        cmd += ["-vf", vf]
+    cmd += ["-c:v", "libx264", "-preset", preset, "-crf", crf, "-pix_fmt", "yuv420p", "-threads", "2"]
+    if keep_audio:
+        cmd += ["-c:a", "aac", "-b:a", "128k"]
+    else:
+        cmd += ["-an"]
+    cmd += ["-movflags", "+faststart", str(output_path)]
+
+    try:
+        subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=300)
+        if output_path.exists() and output_path.stat().st_size > 0:
+            return output_path
+        raise RuntimeError(f"ffmpeg produced no output for {input_path.name}")
+    except subprocess.CalledProcessError as e:
+        # Surface ffmpeg stderr for the error_response mapper (moov/codec branches)
+        err = (e.stderr.decode(errors="ignore") if isinstance(e.stderr, bytes) else str(e.stderr or "")) or str(e)
+        # Fall through to moviepy fallback for cases where ffmpeg args were wrong (e.g. vf)
+        fallback_err = err
+    except subprocess.TimeoutExpired:
+        raise RuntimeError("Conversion timed out after 300s — try a shorter clip or 720p/Smaller file.")
+    except FileNotFoundError:
+        raise
+    else:
+        fallback_err = None
+
+    # Fallback: moviepy (handles some edge filters). Only reached if ffmpeg failed for a non-codec reason.
+    if fallback_err:
+        # If the failure was clearly a codec/file validity issue, don't retry with moviepy — surface it
+        low = fallback_err.lower()
+        if "moov" in low or "invalid data" in low or "unknown encoder" in low:
+            raise RuntimeError(fallback_err)
+
+    from moviepy import VideoFileClip
+
     video_clip = VideoFileClip(str(input_path))
     export_clip = video_clip
     try:
         if resolution != "original":
             limit = int(resolution)
-            scale = min(
-                1, limit / min(video_clip.size), (limit * 16 / 9) / max(video_clip.size)
-            )
-            if scale < 1:
-                dimensions = tuple(
-                    max(2, int(dimension * scale) // 2 * 2)
-                    for dimension in video_clip.size
-                )
-                export_clip = video_clip.resized(new_size=dimensions)
-        crf = {"standard": "23", "high": "18", "small": "28"}[quality]
-        # Heavy-file fast path: for UGC/large sources the proxy (30-60s) would
-        # 502 before ffmpeg finishes. Auto-switch to ultrafast and cap to 720p
-        # when the source is clearly heavy, keeping quality choice via CRF only.
-        try:
-            src_bytes = input_path.stat().st_size
-        except Exception:
-            src_bytes = 0
-        is_heavy = src_bytes > 150 * 1024 * 1024 or max(video_clip.size) > 1920 or getattr(video_clip, "duration", 0) > 120
-        preset = "ultrafast" if is_heavy else "fast"
-        # If auto-capped, ensure we don't upscale; pick 720 when source >720 and user left original
-        auto_limited = False
-        if is_heavy and resolution == "original" and max(video_clip.size) > 1280:
-            limit = 720
             scale = min(1, limit / min(video_clip.size), (limit * 16 / 9) / max(video_clip.size))
             if scale < 1:
                 dimensions = tuple(max(2, int(d * scale) // 2 * 2) for d in video_clip.size)
-                # Replace prior resize if any: close previous export_clip first
+                export_clip = video_clip.resized(new_size=dimensions)
+        # Re-apply heavy auto-cap if probe was missing earlier
+        if is_heavy and resolution == "original" and max(video_clip.size) > 1280 and vf is None:
+            limit = 720
+            scale = min(1, limit / min(video_clip.size), (limit * 16 / 9) / max(video_clip.size))
+            if scale < 1:
+                dims = tuple(max(2, int(d * scale) // 2 * 2) for d in video_clip.size)
                 if export_clip is not video_clip:
                     try:
                         export_clip.close()
                     except Exception:
                         pass
-                export_clip = video_clip.resized(new_size=dimensions)
-                auto_limited = True
+                export_clip = video_clip.resized(new_size=dims)
         export_clip.write_videofile(
             str(output_path),
             codec="libx264",
