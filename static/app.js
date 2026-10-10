@@ -32,6 +32,7 @@
     $('activity-empty').hidden = !!file;
     $('job').hidden = !file;
     $('job').classList.remove('is-complete','is-error');
+    $('job-icon').classList.remove('is-complete','is-error');
     $('download-button').hidden = true;
     $('download-button').removeAttribute('href');
     $('progress').value = 0;
@@ -152,6 +153,7 @@
   });
   function fail(text) {
     $('job').classList.add('is-error');
+    $('job-icon').classList.add('is-error');
     $('job-status').textContent = 'Conversion failed';
     $('job-detail').textContent = 'Your source is still here. Check the message below and try again.';
     $('activity-label').textContent = 'NEEDS ATTENTION';
@@ -202,6 +204,7 @@
       if (request.status < 200 || request.status >= 300 || !result.download_url) { fail(result.error || 'Conversion could not finish. Try another MOV file.'); return; }
       $('progress').value = 100;
       $('job').classList.add('is-complete');
+      $('job-icon').classList.add('is-complete');
       $('job-status').textContent = 'Ready to download';
       $('job-detail').textContent = `${result.filename} · ${size(result.size)} · MP4`;
       $('activity-label').textContent = 'COMPLETE';

@@ -3,15 +3,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#101112">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#000000">
   <title>Video converter — MOV to MP4</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='editor.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='workspace.css') }}">
   <script defer src="{{ url_for('static', filename='app.js') }}"></script>
 </head>
 <body>
 <header class="app-header">
   <a class="brand" href="/" aria-label="Video converter home"><span class="brand-icon">{{ glyph('film',22) }}</span><span>Video<span class="brand-light">converter</span></span></a>
   <span class="header-divider"></span><span class="header-context">Conversion workspace</span>
+  <span class="header-health"><i></i> All systems ready</span>
   <a class="source-link" href="https://github.com/Akosempire/videoconverter" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
 </header>
 <main>
@@ -22,7 +23,7 @@
       <aside class="panel media-panel">
         <div class="panel-heading"><h2>{{ glyph('folder',16) }} Media</h2><span class="count" id="file-count">0</span></div>
         <div class="media-body">
-          <div class="media-empty" id="media-empty"><span class="muted-icon">{{ glyph('film',28) }}</span><h3>Your footage lives here</h3><p>Add a MOV file to see its details and preview.</p><button type="button" class="text-button" data-import>{{ glyph('plus',15) }} Add a file</button></div>
+          <div class="media-empty" id="media-empty"><span class="muted-icon"><svg class="mini-isometric" viewBox="0 0 48 48" aria-hidden="true"><path d="m24 5 17 9.5v19L24 43 7 33.5v-19L24 5Z" fill="#17131f" stroke="#7545c7"/><path d="m7 14.5 17 10 17-10M24 24.5V43" fill="none" stroke="#a78bfa" stroke-width="1.5"/><path d="M19 17v7l7-4-7-3Z" fill="#c4b5fd"/></svg></span><h3>Your footage lives here</h3><p>Add a MOV file to see its details and preview.</p><button type="button" class="text-button" data-import>{{ glyph('plus',15) }} Add a file</button></div>
           <div class="media-card" id="media-card" hidden><div class="media-thumbnail"><img id="thumbnail" alt="Uploaded video frame" hidden><span id="thumbnail-fallback">{{ glyph('film',36) }}</span><span class="file-type">MOV</span><span class="thumbnail-duration" id="thumbnail-duration"></span></div><div class="media-card-info"><strong id="source-name"></strong><span id="source-size"></span></div></div>
           <dl class="source-details" id="source-details" hidden><div><dt>Duration</dt><dd id="source-duration">Reading…</dd></div><div><dt>Dimensions</dt><dd id="source-resolution">Reading…</dd></div><div><dt>Source format</dt><dd>QuickTime / MOV</dd></div></dl>
           <div class="media-actions" id="media-actions" hidden><button type="button" class="text-button" data-import>Replace file</button><button type="button" class="icon-button" id="remove-file" aria-label="Remove file" title="Remove file">{{ glyph('trash',16) }}</button></div>
@@ -30,9 +31,40 @@
         <div class="panel-note">{{ glyph('lock',14) }} Your original file stays unchanged.</div>
       </aside>
       <section class="panel preview-panel" aria-label="Video preview">
-        <div class="panel-heading"><h2>Source preview</h2><span class="panel-label" id="preview-label">NO FILE SELECTED</span></div>
+        <div class="panel-heading"><h2>{{ glyph('play',16) }} Source preview</h2><span class="panel-label" id="preview-label">NO FILE SELECTED</span></div>
         <div class="monitor" id="drop-zone">
-          <div class="preview-empty" id="preview-empty"><div class="empty-art" aria-hidden="true"><span></span><div>{{ glyph('film',36) }}</div></div><span class="format-pill">MOV <span>→</span> MP4</span><h2>Your next video starts here.</h2><p>Drop your MOV file into the workspace,<br>or choose one from your device.</p>{{ action('Choose a video','plus','choose-file',true) }}<span class="file-guidance" id="file-guidance">MOV files · Up to 500 MB · One at a time</span></div>
+          <div class="preview-empty" id="preview-empty"><div class="empty-art" aria-hidden="true">
+            <svg class="conversion-art" viewBox="0 0 360 220" fill="none" role="presentation">
+              <ellipse class="art-shadow" cx="181" cy="188" rx="103" ry="13" fill="#1b1526"/>
+              <g class="art-back-file">
+                <path d="m80 65 64-36 64 36v83l-64 36-64-36V65Z" fill="#121016" stroke="#4c3571"/>
+                <path d="m80 65 64 37 64-37M144 102v82" stroke="#7550a8" stroke-width="1.5"/>
+                <path d="m126 122 13-8 16 9-13 8-16-9Z" fill="#32234a" stroke="#9a75d4"/>
+                <path d="M139 131v17l16-9v-16" fill="#20172f" stroke="#8d69c7"/>
+                <path d="m139 131-13-9v16l13 10" fill="#17121e" stroke="#71509d"/>
+              </g>
+              <g class="art-front-file">
+                <path d="m128 58 55-31 55 31v85l-55 32-55-32V58Z" fill="#19151f" stroke="#9565df" stroke-width="1.5"/>
+                <path d="m128 58 55 32 55-32M183 90v85" stroke="#a78bfa" stroke-width="1.5"/>
+                <path d="m150 57 33-19 32 19-32 19-33-19Z" fill="#302344" stroke="#b49af2"/>
+                <path d="m165 55 4-2 13 8 13-8 4 2-17 10-17-10Z" fill="#c4b5fd"/>
+                <path d="m164 68 19 11 19-11v8l-19 11-19-11v-8Z" fill="#513584" stroke="#a78bfa"/>
+                <path d="M153 110h22m-22 8h30" stroke="#4f3a70" stroke-width="2" stroke-linecap="round"/>
+              </g>
+              <g class="art-format art-format-mov">
+                <rect x="76" y="149" width="53" height="25" rx="7" fill="#16131c" stroke="#55416f"/>
+                <text x="102.5" y="165" text-anchor="middle" fill="#c4b5fd" font-size="10" font-family="ui-monospace,monospace" letter-spacing="1">.MOV</text>
+              </g>
+              <g class="art-format art-format-mp4">
+                <rect x="233" y="104" width="54" height="26" rx="7" fill="#171420" stroke="#7853b8"/>
+                <text x="260" y="121" text-anchor="middle" fill="#d6c8ff" font-size="10" font-family="ui-monospace,monospace" letter-spacing="1">.MP4</text>
+              </g>
+              <path d="m231 151 20 11m-7-1 7 1 1-7" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="269" cy="72" r="12" fill="#171420" stroke="#55377f"/>
+              <path d="m267 66 8 6-8 6V66Z" fill="#a78bfa"/>
+              <circle cx="97" cy="101" r="3" fill="#8b5cf6" opacity=".8"/>
+            </svg>
+          </div><span class="format-pill">MOV <span>→</span> MP4</span><h2>Your next video starts here.</h2><p>Drop your MOV file into the workspace,<br>or choose one from your device.</p>{{ action('Choose a video','upload','choose-file',true) }}<span class="file-guidance" id="file-guidance">MOV files · Up to 500 MB · One at a time</span></div>
           <video id="preview" controls playsinline preload="auto" hidden></video>
           <div class="preview-unavailable" id="preview-unavailable" hidden>{{ glyph('film',32) }}<h3>Preview isn’t available for this file</h3><p>Your browser may not support its codec. You can still try converting it to MP4.</p></div>
           <div class="drop-overlay" aria-hidden="true">{{ glyph('plus',36) }} Drop to import your MOV</div>
@@ -43,25 +75,25 @@
         {{ heading('Export settings', 'OUTPUT') }}
         <div class="export-body"><div class="output-format"><span class="format-symbol">{{ glyph('film',24) }}</span><div><strong>MP4</strong><span>Plays almost everywhere</span></div><span class="format-selected">✓</span></div>
           <fieldset id="export-options"><legend class="sr-only">Output options</legend>
-            <label class="field" for="quality"><span>Quality</span><select id="quality" name="quality"><option value="standard">Balanced</option><option value="high">High quality</option><option value="small">Smaller file</option></select><small id="quality-description">A balance of clarity and file size.</small></label>
-            <label class="field" for="resolution"><span>Resolution</span><select id="resolution" name="resolution"><option value="original">Keep original</option><option value="1080">Up to 1080p</option><option value="720">Up to 720p</option></select><small>Aspect ratio stays the same. No upscaling.</small></label>
-            <label class="audio-option"><span><strong>Keep audio</strong><small>Include the source audio, if present</small></span><input type="checkbox" name="keep_audio" id="keep-audio" value="yes" checked><span class="switch" aria-hidden="true"></span></label>
+            <label class="field" for="quality"><span>{{ glyph('sliders',15) }} Quality</span><select id="quality" name="quality"><option value="standard">Balanced</option><option value="high">High quality</option><option value="small">Smaller file</option></select><small id="quality-description">A balance of clarity and file size.</small></label>
+            <label class="field" for="resolution"><span>{{ glyph('monitor',15) }} Resolution</span><select id="resolution" name="resolution"><option value="original">Keep original</option><option value="1080">Up to 1080p</option><option value="720">Up to 720p</option></select><small>Aspect ratio stays the same. No upscaling.</small></label>
+            <label class="audio-option"><span><strong>{{ glyph('volume',15) }} Keep audio</strong><small>Include the source audio, if present</small></span><input type="checkbox" name="keep_audio" id="keep-audio" value="yes" checked><span class="switch" aria-hidden="true"></span></label>
           </fieldset>
           <div class="output-summary"><span>Video codec <b>H.264</b></span><span>Audio codec <b id="audio-codec">AAC</b></span></div>
-          {{ action('Convert to MP4','share','convert-button',true,'submit') }}
+          {{ action('Convert to MP4','convert','convert-button',true,'submit') }}
           <p class="export-caption" id="export-caption">Add a file to start converting.</p>
         </div>
       </aside>
       <section class="panel activity-panel" aria-label="Conversion status">
         <div class="panel-heading"><h2>Conversion</h2><span class="panel-label" id="activity-label">NOT STARTED</span></div>
         <div class="activity-empty" id="activity-empty">{{ glyph('layers',22) }}<div><h3>A clear path from source to export.</h3><p>Your conversion status and download will appear here.</p></div><span class="activity-path" aria-hidden="true">Import <i>→</i> Convert <i>→</i> Download</span></div>
-        <div class="job" id="job" hidden><div class="job-icon">{{ glyph('film',22) }}</div><div class="job-body"><div class="job-heading"><strong id="job-name"></strong><span class="job-status" id="job-status">Ready to convert</span></div><div class="job-progress"><progress id="progress" max="100" value="0" aria-label="Upload progress"></progress><span id="job-detail">Choose your export settings, then convert.</span></div></div><a class="button button-primary download-button" id="download-button" hidden download>Download MP4 {{ glyph('share',16) }}</a></div>
+        <div class="job" id="job" hidden><div class="job-icon" id="job-icon"><span class="job-icon-default">{{ glyph('film',22) }}</span><span class="job-icon-error">{{ glyph('alert',22) }}</span><svg class="job-success-art" viewBox="0 0 40 40" aria-hidden="true"><path d="m20 3 14 8v17l-14 8-14-8V11l14-8Z" fill="#1b1624" stroke="#8b5cf6"/><path d="m6 11 14 8 14-8M20 19v17" fill="none" stroke="#a78bfa" stroke-width="1.3"/><path class="success-tick" d="m14 20 4 4 8-9" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="job-body"><div class="job-heading"><strong id="job-name"></strong><span class="job-status" id="job-status">Ready to convert</span></div><div class="job-progress"><progress id="progress" max="100" value="0" aria-label="Upload progress"></progress><span id="job-detail">Choose your export settings, then convert.</span></div></div><a class="button button-primary download-button" id="download-button" hidden download>Download MP4 {{ glyph('download',16) }}</a></div>
         <div id="feedback" aria-live="polite" aria-atomic="true">{% if error %}<div class="alert error" role="alert">{{ error }}</div>{% endif %}{% if success %}<div class="alert success">Conversion complete. <a href="{{ download_url }}" download>Download {{ filename }}</a></div>{% endif %}</div>
       </section>
     </div>
   </form>
   <footer class="workspace-footer"><span>{{ glyph('lock',13) }} Preview on your device. Upload when you convert.</span><span>MOV in. MP4 out.</span></footer>
 </main>
-<noscript><style>.native-file{position:static!important;width:auto!important;height:auto!important;clip-path:none!important;padding:16px;margin-bottom:16px;border:1px solid #333}.native-file input{margin:12px}#choose-file,[data-import]{display:none!important}</style></noscript>
+<noscript><style>.native-file{position:static!important;width:auto!important;height:auto!important;clip-path:none!important;padding:16px;margin-bottom:16px;border:1px solid #27272a}.native-file input{margin:12px}#choose-file,[data-import]{display:none!important}</style></noscript>
 </body>
 </html>

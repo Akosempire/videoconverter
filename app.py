@@ -78,6 +78,10 @@ def create_app(test_config=None):
     def design_system():
         return render_template("design-system.html")
 
+    @app.route("/design-system/premium", methods=["GET"])
+    def design_system_premium():
+        return render_template("design-system-premium.html")
+
     @app.errorhandler(413)
     def upload_too_large(error):
         return error_response("This file exceeds the 500 MB upload limit.", 413)

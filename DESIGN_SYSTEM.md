@@ -1,45 +1,47 @@
 ﻿# Video converter design system
 
-A functional conversion workspace inspired by the reference's dark panels,
-warm yellow actions, blue video accents, and green completion states. The image
-is not a screenshot template or preloaded project.
+A functional conversion workspace with a pure-black canvas, restrained violet
+actions, and green completion states. The image is not a screenshot template or
+preloaded project.
 
 ## Components and source
 
 - `templates/components/workspace.html`: shared action button and panel-heading macros.
 - `templates/components/editor.html`: reusable inline SVG glyphs.
 - `templates/index.html`: media, preview, export, and conversion-status panels.
-- `static/editor.css`: semantic tokens, states, and responsive layout.
+- `static/workspace.css`: semantic tokens, states, and responsive layout.
 - `static/app.js`: source lifecycle and actual upload/conversion behavior.
 - `/design-system`: component specimens using these shared styles.
 
 ```jinja
 {% from 'components/workspace.html' import action, heading %}
 {{ heading('Source preview', 'SOURCE') }}
-{{ action('Choose a video', 'plus', 'choose-file', true) }}
+{{ action('Choose a video', 'upload', 'choose-file', true) }}
 ```
 
 ## Foundations
 
 | Role | Token / value |
 | --- | --- |
-| Canvas | `--bg: #101112` |
-| Panel | `--panel: #18191c` |
-| Raised controls | `--surface: #222327` |
-| Border | `--border: #2c2d32` |
-| Main text | `--text: #eeeff2` |
-| Supporting text | `--muted: #9a9da7` |
-| Primary action | `--accent: #eccc72` |
-| Video / progress | `--blue: #78b8f1` |
-| Completion | `--green: #74cfaa` |
-| Error | `--error: #f5a4a4` |
+| Canvas | `--bg: #000000` |
+| Panel | `--panel: #0d0d0f` |
+| Raised controls | `--surface: #141418` |
+| Input | `--input: #18181d` |
+| Border | `--border: #27272a` |
+| Main text | `--text: #ffffff` |
+| Supporting text | `--muted: #a1a1aa` |
+| Primary action | `--accent: #7c3aed` |
+| Hover / light accent | `--accent-hover: #8b5cf6`, `--accent-light: #a78bfa` |
+| Completion | `--green: #34d399` |
+| Error | `--error: #f87171` |
 | Spacing | 4, 8, 12, 16, 20, 24, 32px |
-| Radii | panels 10px, buttons 6px |
+| Radii | panels 12px, buttons 8px |
 
 System fonts avoid external font downloads. Icons are SVG and decorative icons
 are hidden from assistive technology. Every control has a label and visible
-keyboard focus. Essential feedback uses a live region. Reduced motion is honored
-for scrolling to conversion status. No automatic promotional animation is used.
+keyboard focus. Essential feedback uses a live region. The central isometric
+MOV-to-MP4 illustration floats gently; other motion is limited to user interaction
+and conversion state. Reduced-motion preferences disable animation.
 
 ## Product states
 
